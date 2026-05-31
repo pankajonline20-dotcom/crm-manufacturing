@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
+  "framework": "vite",
+  "functions": {
+    "backend/index.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/dist/$1"
+    }
+  ],
+  "env": {
+    "JWT_SECRET": "@JWT_SECRET",
+    "ANTHROPIC_API_KEY": "@ANTHROPIC_API_KEY",
+    "DATABASE_PATH": "./data/crm.db",
+    "FRONTEND_URL": "@FRONTEND_URL"
+  }
+}
