@@ -23,9 +23,11 @@ const app = express();
 app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:5173',
+    'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
     'http://localhost:5176',
+    /\.vercel\.app$/,
   ],
   credentials: true
 }));
@@ -55,11 +57,17 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3001;
 
-initializeDatabase();
-runMigrations();
-seedDatabase().then(() => {
-  app.listen(PORT, () => {
-    console.log(`CRM Backend running on http://localhost:${PORT}`);
-    startNightlyJobs();
-  });
-}).catch(console.error);
+(async () => {
+  try {
+    await initializeDatabase();
+    await runMigrations();
+    await seedDatabase();
+    app.listen(PORT, () => {
+      console.log(`CRM Backend running on http://localhost:${PORT}`);
+      startNightlyJobs();
+    });
+  } catch (err) {
+    console.error('Startup error:', err);
+    process.exit(1);
+  }
+})();

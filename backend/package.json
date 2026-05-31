@@ -13,6 +13,7 @@
   "type": "commonjs",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
+    "@supabase/supabase-js": "^2.106.2",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.10.0",
     "cors": "^2.8.6",
@@ -22,6 +23,7 @@
     "multer": "^2.1.1",
     "node-cron": "^4.2.1",
     "pdfkit": "^0.18.0",
+    "pg": "^8.21.0",
     "uuid": "^14.0.0"
   }
 }
