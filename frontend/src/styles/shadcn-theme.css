@@ -1,0 +1,41 @@
+/* Bridges shadcn/ui CSS variables onto this app's existing design tokens (index.css) */
+
+:root {
+  --background: var(--bg-surface);
+  --foreground: var(--text-primary);
+
+  --card: var(--bg-surface);
+  --card-foreground: var(--text-primary);
+
+  --popover: var(--bg-surface);
+  --popover-foreground: var(--text-primary);
+
+  --primary: var(--brand-primary);
+  --primary-foreground: #FFFFFF;
+
+  --secondary: var(--bg-surface-2);
+  --secondary-foreground: var(--text-primary);
+
+  --muted: var(--bg-surface-2);
+  --muted-foreground: var(--text-secondary);
+
+  --accent: var(--brand-primary-light);
+  --accent-foreground: var(--brand-primary-dark);
+
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  /* --border already exists as a token in index.css with the same name and
+     meaning — do not redefine it here (self-referencing var(--border) would
+     make it invalid). */
+  --input: var(--border);
+  --ring: var(--brand-primary);
+
+  --radius: 0.75rem;
+}
+
+[data-theme="dark"] {
+  --accent: rgba(232, 80, 10, 0.15);
+  --accent-foreground: var(--text-primary);
+  --destructive: #F87171;
+}

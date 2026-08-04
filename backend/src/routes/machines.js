@@ -371,15 +371,22 @@ router.delete('/:id', adminOnly, (req, res) => {
     const machine = db.prepare('SELECT id FROM machines WHERE id = ?').get(req.params.id);
     if (!machine) return res.status(404).json({ error: 'Machine not found' });
 
+    // Temporarily disable foreign key constraints
+    db.exec('PRAGMA foreign_keys = OFF;');
+
     // Delete in order of dependencies
     db.prepare('DELETE FROM machine_media WHERE machine_id = ?').run(req.params.id);
     db.prepare('DELETE FROM deliveries WHERE machine_id = ?').run(req.params.id);
     db.prepare('DELETE FROM knowledge_base WHERE machine_id = ?').run(req.params.id);
     db.prepare('DELETE FROM machines WHERE id = ?').run(req.params.id);
 
+    // Re-enable foreign key constraints
+    db.exec('PRAGMA foreign_keys = ON;');
+
     res.json({ success: true, message: 'Machine deleted' });
   } catch (err) {
     console.error('Delete machine error:', err);
+    db.exec('PRAGMA foreign_keys = ON;');
     res.status(500).json({ error: 'Failed to delete machine: ' + err.message });
   }
 });
