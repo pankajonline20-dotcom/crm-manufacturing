@@ -1,9 +1,9 @@
 const bcrypt = require('bcryptjs');
 const { db } = require('./database');
 
-async function seedDatabase() {
+function seedDatabase() {
   try {
-    const existingAdmin = await db.prepare('SELECT id FROM users WHERE email = ?').get('admin@heatpresscrm.com');
+    const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@heatpresscrm.com');
     if (existingAdmin) {
       console.log('Database already seeded.');
       return;
@@ -13,9 +13,9 @@ async function seedDatabase() {
     const adminHash = bcrypt.hashSync('admin123', 10);
     const agentHash = bcrypt.hashSync('agent123', 10);
 
-    await db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Pankaj Mehta', 'admin@heatpresscrm.com', adminHash, 'admin');
-    await db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Rahul Shah', 'rahul@heatpresscrm.com', agentHash, 'agent');
-    await db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Priya Patel', 'priya@heatpresscrm.com', agentHash, 'agent');
+    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Pankaj Mehta', 'admin@heatpresscrm.com', adminHash, 'admin');
+    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Rahul Shah', 'rahul@heatpresscrm.com', agentHash, 'agent');
+    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Priya Patel', 'priya@heatpresscrm.com', agentHash, 'agent');
 
     // Machines
     const machines = [
@@ -124,10 +124,19 @@ async function seedDatabase() {
     ];
 
     for (const m of machines) {
-      await db.prepare(`
+      db.prepare(`
         INSERT INTO machines (model_name, category, price, gst_percent, description, specifications, faqs)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `).run(m.model_name, m.category, m.price, m.gst_percent, m.description, m.specifications, m.faqs);
+    }
+
+    // Settings
+    const existingSettings = db.prepare('SELECT id FROM settings').get();
+    if (!existingSettings) {
+      db.prepare(`
+        INSERT INTO settings (business_name, phone, email, address)
+        VALUES (?, ?, ?, ?)
+      `).run('Clerbulk Printing Machines', '+91-9876543210', 'info@clerbulk.com', 'Surat, Gujarat');
     }
 
     // Leads
@@ -190,16 +199,16 @@ async function seedDatabase() {
     ];
 
     for (const l of leads) {
-      await db.prepare(`
+      db.prepare(`
         INSERT INTO leads (name, phone, email, city, source, requirement, status, assigned_to, next_followup_date)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(l.name, l.phone, l.email, l.city, l.source, l.requirement, l.status, l.assigned_to, l.next_followup_date);
     }
 
     // Call logs
-    await db.prepare(`INSERT INTO call_logs (lead_id, user_id, notes, duration_minutes) VALUES (1, 1, 'Customer interested in T-500 aur T-800. Budget around 40k for 2 machines. Will call back Thursday.', 8)`).run();
-    await db.prepare(`INSERT INTO call_logs (lead_id, user_id, notes, duration_minutes) VALUES (2, 2, 'Sent MG-100 quote. Customer comparing with another supplier. Follow up Friday.', 5)`).run();
-    await db.prepare(`INSERT INTO call_logs (lead_id, user_id, notes, duration_minutes) VALUES (3, 1, 'Bulk order of 5 units T-800. Negotiating on price. Asking for 10% discount.', 15)`).run();
+    db.prepare(`INSERT INTO call_logs (lead_id, user_id, notes, duration_minutes) VALUES (1, 1, 'Customer interested in T-500 aur T-800. Budget around 40k for 2 machines. Will call back Thursday.', 8)`).run();
+    db.prepare(`INSERT INTO call_logs (lead_id, user_id, notes, duration_minutes) VALUES (2, 2, 'Sent MG-100 quote. Customer comparing with another supplier. Follow up Friday.', 5)`).run();
+    db.prepare(`INSERT INTO call_logs (lead_id, user_id, notes, duration_minutes) VALUES (3, 1, 'Bulk order of 5 units T-800. Negotiating on price. Asking for 10% discount.', 15)`).run();
 
     // Sample quotation
     const quoteItems = JSON.stringify([
@@ -209,19 +218,19 @@ async function seedDatabase() {
     const gstAmount = 37000 * 0.18;
     const total = subtotal + gstAmount;
 
-    await db.prepare(`
+    db.prepare(`
       INSERT INTO quotations (lead_id, user_id, quote_number, items, subtotal, gst_amount, total_amount, payment_terms, validity_days, notes, status)
       VALUES (1, 1, 'QT-2025-001', ?, ?, ?, ?, '50% advance, 50% on delivery', 15, 'Free installation in Surat', 'sent')
     `).run(quoteItems, subtotal, gstAmount, total);
 
     // Sample delivery
-    await db.prepare(`
+    db.prepare(`
       INSERT INTO deliveries (lead_id, machine_id, delivered_at, installation_done)
       VALUES (5, 2, '2025-12-20', 1)
     `).run();
 
     // Sample payment
-    await db.prepare(`
+    db.prepare(`
       INSERT INTO payments (lead_id, quotation_id, amount, payment_date, mode, status, notes)
       VALUES (1, 1, ?, null, null, 'pending', 'Awaiting 50% advance payment')
     `).run(total);

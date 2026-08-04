@@ -8,6 +8,7 @@ import { CardSkeleton } from '../components/ui/Skeleton';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../store';
 import toast from 'react-hot-toast';
+import VIPToggle from '../components/leads/VIPToggle';
 import {
   Phone, MapPin, Mail, ArrowLeft, MessageCircle, Edit2, Save, X, Trash2,
   Plus, FileText, Clock, Loader2, Copy, Check, CreditCard, Truck, Image
@@ -200,6 +201,16 @@ export default function LeadDetail() {
                         </div>
                       ))}
                       <div>
+                        <label className="label">Source</label>
+                        <select className="input" value={form.source} onChange={e => setForm(f => ({ ...f, source: e.target.value }))}>
+                          <option value="manual">Manual</option>
+                          <option value="facebook">Facebook</option>
+                          <option value="whatsapp">WhatsApp</option>
+                          <option value="referral">Referral</option>
+                          <option value="indiamart">IndiaMART</option>
+                        </select>
+                      </div>
+                      <div>
                         <label className="label">Status</label>
                         <select className="input" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
                           {LEAD_STATUSES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
@@ -237,6 +248,7 @@ export default function LeadDetail() {
               <Link to={`/quotations/new?lead_id=${lead.id}&lead_name=${encodeURIComponent(lead.name)}`} className="btn-primary" style={{ justifyContent: 'center', padding: '10px 16px' }}>
                 <FileText size={16} /> Create Quotation
               </Link>
+              <VIPToggle lead={lead} isAdmin={isAdmin} onUpdate={setLead} />
             </div>
           )}
 

@@ -8,6 +8,9 @@ import { useStore } from '../store';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Calendar, TrendingUp, CreditCard, Users, ArrowRight, Phone, Flame, Zap, Trophy, ChevronRight } from 'lucide-react';
 import { formatINR, formatPhone } from '../utils';
+import VIPCustomers from '../components/dashboard/VIPCustomers';
+import TomorrowVisitors from '../components/dashboard/TomorrowVisitors';
+import AddVisitModal from '../components/visits/AddVisitModal';
 
 function StatCard({ icon: Icon, label, value, sub, trend, color, sparkData, delay = 0, to }) {
   const [displayed, setDisplayed] = useState(0);
@@ -133,6 +136,7 @@ export default function Dashboard() {
   const [pipeline, setPipeline] = useState([]);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAddVisit, setShowAddVisit] = useState(false);
   const { activityScore, streak } = useStore();
 
   const heatmapData = [
@@ -236,6 +240,18 @@ export default function Dashboard() {
           </div>
         </motion.div>
       </div>
+
+      {/* VIP & Tomorrow Visitors */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 20 }}>
+        <VIPCustomers />
+        <TomorrowVisitors onAddVisit={() => setShowAddVisit(true)} />
+      </div>
+
+      <AddVisitModal
+        open={showAddVisit}
+        onClose={() => setShowAddVisit(false)}
+        onSave={() => setShowAddVisit(false)}
+      />
 
       {/* Bottom row */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>

@@ -17,6 +17,8 @@ const chatRoutes = require('./src/routes/chat');
 const reportsRoutes = require('./src/routes/reports');
 const advancedRoutes = require('./src/routes/advanced');
 const boardroomRoutes = require('./src/routes/boardroom');
+const visitsRoutes = require('./src/routes/visits');
+const directoryRoutes = require('./src/routes/directory');
 
 const app = express();
 
@@ -45,6 +47,8 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/deliveries', deliveriesRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/visits', visitsRoutes);
+app.use('/api/directory', directoryRoutes);
 app.use('/api', advancedRoutes);
 app.use('/api', boardroomRoutes);
 
@@ -57,17 +61,15 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3001;
 
-(async () => {
-  try {
-    await initializeDatabase();
-    await runMigrations();
-    await seedDatabase();
-    app.listen(PORT, () => {
-      console.log(`CRM Backend running on http://localhost:${PORT}`);
-      startNightlyJobs();
-    });
-  } catch (err) {
-    console.error('Startup error:', err);
-    process.exit(1);
-  }
-})();
+try {
+  initializeDatabase();
+  runMigrations();
+  seedDatabase();
+  app.listen(PORT, () => {
+    console.log(`CRM Backend running on http://localhost:${PORT}`);
+    startNightlyJobs();
+  });
+} catch (err) {
+  console.error('Startup error:', err);
+  process.exit(1);
+}

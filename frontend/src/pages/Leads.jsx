@@ -8,7 +8,7 @@ import StatusBadge, { STATUSES } from '../components/ui/StatusBadge';
 import { TableSkeleton } from '../components/ui/Skeleton';
 import { useStore } from '../store';
 import toast from 'react-hot-toast';
-import { Search, Plus, Filter, Phone, MapPin, LayoutGrid, List, Columns, X, MessageCircle, FileText, ChevronRight } from 'lucide-react';
+import { Search, Plus, Filter, Phone, MapPin, LayoutGrid, List, Columns, X, MessageCircle, FileText, ChevronRight, Star } from 'lucide-react';
 import { formatDate, formatPhone, SOURCE_LABELS, waLink } from '../utils';
 
 const STATUS_META = {
@@ -76,6 +76,18 @@ export default function Leads() {
     } catch {
       setLeads(prev => prev.map(l => l.id === leadId ? oldLead : l));
       toast.error('Update failed');
+    }
+  };
+
+  const toggleVIP = async (leadId, currentVIP) => {
+    const oldLead = leads.find(l => l.id === leadId);
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, is_vip: currentVIP ? 0 : 1 } : l));
+    try {
+      await api.put(`/leads/${leadId}/vip`, { is_vip: currentVIP ? 0 : 1 });
+      toast.success(currentVIP ? 'Removed from VIP' : '⭐ Added to VIP!');
+    } catch {
+      setLeads(prev => prev.map(l => l.id === leadId ? oldLead : l));
+      toast.error('VIP update failed');
     }
   };
 
@@ -183,7 +195,7 @@ export default function Leads() {
             <Link to="/leads/new" className="btn-primary">+ Add First Lead</Link>
           </div>
         ) : view === 'table' ? (
-          <TableView leads={leads} onStatusChange={updateStatus} />
+          <TableView leads={leads} onStatusChange={updateStatus} onVIPToggle={toggleVIP} />
         ) : (
           <KanbanView grouped={grouped} onDragEnd={onDragEnd} />
         )}
@@ -192,7 +204,7 @@ export default function Leads() {
   );
 }
 
-function TableView({ leads, onStatusChange }) {
+function TableView({ leads, onStatusChange, onVIPToggle }) {
   const today = new Date().toISOString().split('T')[0];
 
   return (
@@ -243,6 +255,14 @@ function TableView({ leads, onStatusChange }) {
             </div>
 
             <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => onVIPToggle?.(lead.id, lead.is_vip)}
+                className="btn-ghost"
+                style={{ padding: '5px', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                title={lead.is_vip ? 'Remove VIP' : 'Mark as VIP'}
+              >
+                <Star size={14} fill={lead.is_vip ? '#FFB800' : 'none'} color={lead.is_vip ? '#FFB800' : '#D1D5DB'} />
+              </button>
               <a href={waLink(lead.phone)} target="_blank" rel="noreferrer" className="btn-ghost" style={{ padding: '5px', borderRadius: 6 }}>
                 <MessageCircle size={14} style={{ color: '#25D366' }} />
               </a>

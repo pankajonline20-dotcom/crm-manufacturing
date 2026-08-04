@@ -1,46 +1,58 @@
-const { Pool } = require('pg');
+const Database = require('better-sqlite3');
+const path = require('path');
+const fs = require('fs');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const dbPath = process.env.DATABASE_URL || './data/crm.db';
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
 
-// Wrapper to maintain better-sqlite3 API compatibility
+const sqlite = new Database(dbPath);
+sqlite.pragma('journal_mode = WAL');
+
 class PreparedStatement {
-  constructor(query) {
-    this.query = query;
+  constructor(stmt) {
+    this.stmt = stmt;
   }
 
   run(...params) {
-    return pool.query(this.query, params).then(result => ({
-      lastInsertRowid: result.rows[0]?.id || null,
-      changes: result.rowCount
-    })).catch(err => {
-      console.error('Query error:', err, 'Query:', this.query, 'Params:', params);
+    try {
+      const result = this.stmt.run(...params);
+      return {
+        lastInsertRowid: result.lastInsertRowid,
+        changes: result.changes
+      };
+    } catch (err) {
+      console.error('Query error:', err);
       throw err;
-    });
+    }
   }
 
   all(...params) {
-    return pool.query(this.query, params).then(result => result.rows).catch(err => {
-      console.error('Query error:', err, 'Query:', this.query);
+    try {
+      return this.stmt.all(...params);
+    } catch (err) {
+      console.error('Query error:', err);
       throw err;
-    });
+    }
   }
 
   get(...params) {
-    return pool.query(this.query, params).then(result => result.rows[0] || null).catch(err => {
-      console.error('Query error:', err, 'Query:', this.query);
+    try {
+      return this.stmt.get(...params) || null;
+    } catch (err) {
+      console.error('Query error:', err);
       throw err;
-    });
+    }
   }
 }
 
 const db = {
-  prepare: (query) => new PreparedStatement(query),
-  exec: async (sql) => {
+  prepare: (query) => new PreparedStatement(sqlite.prepare(query)),
+  exec: (sql) => {
     try {
-      await pool.query(sql);
+      sqlite.exec(sql);
     } catch (err) {
       console.error('Exec error:', err);
       throw err;
@@ -48,20 +60,20 @@ const db = {
   }
 };
 
-async function initializeDatabase() {
+function initializeDatabase() {
   try {
-    await db.exec(`
+    db.exec(`
       CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         role TEXT DEFAULT 'agent',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS leads (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         phone TEXT NOT NULL,
         email TEXT,
@@ -71,29 +83,33 @@ async function initializeDatabase() {
         status TEXT DEFAULT 'new',
         assigned_to INTEGER REFERENCES users(id),
         next_followup_date DATE,
-        last_called_at TIMESTAMP,
+        last_called_at datetime,
         score INTEGER DEFAULT 0,
-        score_updated_at TIMESTAMP,
+        score_updated_at datetime,
         score_label TEXT DEFAULT 'cold',
         lost_to_competitor TEXT,
         lost_reason TEXT,
         lost_their_price REAL,
         lost_notes TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        is_vip INTEGER DEFAULT 0,
+        vip_note TEXT,
+        vip_marked_at datetime,
+        vip_marked_by INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        updated_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS call_logs (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         lead_id INTEGER REFERENCES leads(id),
         user_id INTEGER REFERENCES users(id),
         notes TEXT,
         duration_minutes INTEGER,
-        called_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        called_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS machines (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         model_name TEXT NOT NULL,
         category TEXT,
         price REAL,
@@ -105,16 +121,16 @@ async function initializeDatabase() {
       );
 
       CREATE TABLE IF NOT EXISTS machine_media (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         machine_id INTEGER REFERENCES machines(id),
         file_name TEXT,
         file_url TEXT,
         media_type TEXT,
-        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        uploaded_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS quotations (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         lead_id INTEGER REFERENCES leads(id),
         user_id INTEGER REFERENCES users(id),
         quote_number TEXT UNIQUE,
@@ -127,23 +143,36 @@ async function initializeDatabase() {
         notes TEXT,
         status TEXT DEFAULT 'sent',
         pdf_url TEXT,
-        sent_at TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        sent_at datetime,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS deliveries (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         lead_id INTEGER REFERENCES leads(id),
         machine_id INTEGER REFERENCES machines(id),
         delivered_at DATE,
         installation_done INTEGER DEFAULT 0,
         followup_7day_sent INTEGER DEFAULT 0,
         followup_30day_sent INTEGER DEFAULT 0,
-        notes TEXT
+        notes TEXT,
+        dispatched_at datetime,
+        dispatch_email_sent INTEGER DEFAULT 0,
+        dispatch_email_sent_at datetime,
+        tracking_info TEXT,
+        dispatch_notes TEXT,
+        estimated_arrival_date DATE,
+        transport_company TEXT,
+        vehicle_number TEXT,
+        driver_name TEXT,
+        driver_phone TEXT,
+        transporter_phone TEXT,
+        wa_dispatch_sent INTEGER DEFAULT 0,
+        wa_dispatch_sent_at datetime
       );
 
       CREATE TABLE IF NOT EXISTS payments (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         lead_id INTEGER REFERENCES leads(id),
         quotation_id INTEGER REFERENCES quotations(id),
         amount REAL,
@@ -151,79 +180,79 @@ async function initializeDatabase() {
         mode TEXT,
         status TEXT DEFAULT 'pending',
         reminder_count INTEGER DEFAULT 0,
-        last_reminder_at TIMESTAMP,
+        last_reminder_at datetime,
         notes TEXT
       );
 
       CREATE TABLE IF NOT EXISTS knowledge_base (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         machine_id INTEGER REFERENCES machines(id),
         topic TEXT,
         question TEXT,
         answer TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS goals (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER REFERENCES users(id),
         month TEXT NOT NULL,
         type TEXT NOT NULL,
         target_value REAL NOT NULL,
         created_by INTEGER REFERENCES users(id),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS broadcasts (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         message_template TEXT,
         segment_filters TEXT,
         sent_count INTEGER DEFAULT 0,
         created_by INTEGER REFERENCES users(id),
-        sent_at TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        sent_at datetime,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS broadcast_logs (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         broadcast_id INTEGER REFERENCES broadcasts(id),
         lead_id INTEGER REFERENCES leads(id),
         phone TEXT,
         personalised_message TEXT,
         status TEXT DEFAULT 'pending',
         wa_link TEXT,
-        sent_at TIMESTAMP
+        sent_at datetime
       );
 
       CREATE TABLE IF NOT EXISTS customer_health (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         lead_id INTEGER UNIQUE REFERENCES leads(id),
         health_score INTEGER DEFAULT 50,
         health_label TEXT DEFAULT 'healthy',
-        last_interaction_at TIMESTAMP,
+        last_interaction_at datetime,
         payment_delays INTEGER DEFAULT 0,
         complaints INTEGER DEFAULT 0,
         referrals_given INTEGER DEFAULT 0,
         repurchase_count INTEGER DEFAULT 0,
-        score_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        score_updated_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS board_meetings (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         triggered_by TEXT DEFAULT 'manual',
         meeting_type TEXT DEFAULT 'daily',
         status TEXT DEFAULT 'running',
-        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        completed_at TIMESTAMP,
+        started_at datetime DEFAULT CURRENT_TIMESTAMP,
+        completed_at datetime,
         data_snapshot TEXT,
         full_transcript TEXT,
         executive_summary TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS board_actions (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         meeting_id INTEGER REFERENCES board_meetings(id),
         title TEXT NOT NULL,
         description TEXT,
@@ -232,11 +261,11 @@ async function initializeDatabase() {
         due_date DATE,
         expected_outcome TEXT,
         status TEXT DEFAULT 'open',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS kpi_snapshots (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         snapshot_date DATE DEFAULT CURRENT_DATE,
         total_leads INTEGER,
         new_leads_today INTEGER,
@@ -252,8 +281,67 @@ async function initializeDatabase() {
         lost_this_month INTEGER,
         pending_payments REAL,
         hot_leads_count INTEGER,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS customer_visits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id INTEGER REFERENCES leads(id),
+        visitor_name TEXT NOT NULL,
+        visitor_phone TEXT,
+        visitor_company TEXT,
+        visit_date DATE NOT NULL,
+        visit_time TEXT,
+        visit_purpose TEXT,
+        machines_interested TEXT,
+        assigned_to INTEGER REFERENCES users(id),
+        status TEXT DEFAULT 'scheduled',
+        visit_notes TEXT,
+        outcome_notes TEXT,
+        reminder_sent INTEGER DEFAULT 0,
+        created_by INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS directory_contacts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contact_type TEXT NOT NULL,
+        name TEXT NOT NULL,
+        phone TEXT,
+        phone_2 TEXT,
+        email TEXT,
+        city TEXT,
+        state TEXT DEFAULT 'Gujarat',
+        address TEXT,
+        company_name TEXT,
+        customer_ref_number TEXT,
+        machines_owned TEXT,
+        engineer_specialization TEXT,
+        engineer_availability TEXT,
+        dealer_territory TEXT,
+        dealer_commission_pct REAL,
+        supplier_materials TEXT,
+        supplier_lead_time TEXT,
+        notes TEXT,
+        is_active INTEGER DEFAULT 1,
+        created_by INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        updated_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        business_name TEXT DEFAULT 'Clerbulk Printing Machines',
+        phone TEXT DEFAULT '9876543210',
+        email TEXT,
+        address TEXT,
+        updated_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_directory_type ON directory_contacts(contact_type);
+      CREATE INDEX IF NOT EXISTS idx_directory_city ON directory_contacts(city);
+      CREATE INDEX IF NOT EXISTS idx_directory_ref ON directory_contacts(customer_ref_number);
+      CREATE INDEX IF NOT EXISTS idx_customer_visits_date ON customer_visits(visit_date);
     `);
     console.log('Database initialized');
   } catch (err) {

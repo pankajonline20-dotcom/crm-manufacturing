@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../api';
 import toast from 'react-hot-toast';
 import { Truck, CheckCircle, MessageCircle, Plus, Loader2, AlertCircle } from 'lucide-react';
+import DispatchWAModal from '../components/deliveries/DispatchWAModal';
 import { formatDate, formatINR } from '../utils';
 
 export default function Deliveries() {
@@ -10,6 +11,7 @@ export default function Deliveries() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [dispatchTarget, setDispatchTarget] = useState(null);
   const [form, setForm] = useState({ lead_id: '', machine_id: '', delivered_at: '', notes: '' });
 
   useEffect(() => {
@@ -147,6 +149,19 @@ export default function Deliveries() {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => setDispatchTarget(d)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '8px 14px', borderRadius: 10, border: 'none',
+                      background: d.wa_dispatch_sent ? '#DCFCE7' : '#25D366',
+                      color: d.wa_dispatch_sent ? '#0F6E56' : '#fff',
+                      fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                      flex: 1, justifyContent: 'center'
+                    }}
+                  >
+                    💬 {d.wa_dispatch_sent ? '✓ Sent' : 'Send Dispatch'}
+                  </button>
                   {!d.followup_7day_sent && d.days_since_delivery >= 7 && (
                     <button onClick={() => sendFollowup(d, 7)}
                       className="flex-1 flex items-center justify-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-medium py-2 rounded-lg">
@@ -168,6 +183,12 @@ export default function Deliveries() {
           })}
         </div>
       )}
+
+      <DispatchWAModal
+        delivery={dispatchTarget}
+        open={!!dispatchTarget}
+        onClose={() => setDispatchTarget(null)}
+      />
     </div>
   );
 }

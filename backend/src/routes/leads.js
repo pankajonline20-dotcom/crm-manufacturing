@@ -16,7 +16,7 @@ router.get('/', (req, res) => {
   `;
   const params = [];
 
-  if (req.user.role === 'agent') {
+  if (req.user.role === 'agent' && !search) {
     query += ' AND l.assigned_to = ?';
     params.push(req.user.id);
   }
@@ -165,6 +165,39 @@ router.post('/:id/call-log', (req, res) => {
 
   const log = db.prepare('SELECT * FROM call_logs WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json(log);
+});
+
+// VIP customers
+router.get('/vip', (req, res) => {
+  const vips = db.prepare(`
+    SELECT l.*, u.name as vip_marked_by_name
+    FROM leads l
+    LEFT JOIN users u ON l.vip_marked_by = u.id
+    WHERE l.is_vip = 1
+    ORDER BY l.vip_marked_at DESC
+  `).all();
+  res.json(vips);
+});
+
+router.put('/:id/vip', (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+
+  const { is_vip, vip_note } = req.body;
+  const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+  if (!lead) return res.status(404).json({ error: 'Lead not found' });
+
+  db.prepare(`
+    UPDATE leads SET
+      is_vip = ?,
+      vip_note = ?,
+      vip_marked_at = CASE WHEN ? = 1 THEN CURRENT_TIMESTAMP ELSE NULL END,
+      vip_marked_by = CASE WHEN ? = 1 THEN ? ELSE NULL END,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(is_vip ? 1 : 0, vip_note || '', is_vip ? 1 : 0, is_vip ? 1 : 0, req.user.id, req.params.id);
+
+  const updated = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+  res.json(updated);
 });
 
 module.exports = router;

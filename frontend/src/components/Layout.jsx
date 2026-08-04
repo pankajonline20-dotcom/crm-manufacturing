@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Package, FileText, MessageCircle,
   CreditCard, Truck, BarChart2, LogOut, ChevronLeft, ChevronRight,
-  Sun, Moon, Bell, Search, Plus, Zap, Radio, Target, TrendingUp, Heart, AlertCircle, Building2
+  Sun, Moon, Bell, Search, Plus, Zap, Radio, Target, TrendingUp, Heart, AlertCircle, Building2, BookOpen
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CommandPalette from './CommandPalette';
@@ -19,12 +19,11 @@ const NAV = [
   { to: '/chat', icon: MessageCircle, label: 'AI Assistant', dot: true },
   { to: '/payments', icon: CreditCard, label: 'Payments' },
   { to: '/deliveries', icon: Truck, label: 'After-Sales' },
+  { to: '/directory', icon: BookOpen, label: 'Directory' },
   { to: '/reports', icon: BarChart2, label: 'Reports', adminOnly: true },
   // CEO Modules (admin only)
   { to: '/goals', icon: Target, label: 'Goals', adminOnly: true },
   { to: '/bi', icon: TrendingUp, label: 'Intelligence', adminOnly: true },
-  { to: '/competitor', icon: AlertCircle, label: 'Loss Analysis', adminOnly: true },
-  { to: '/health', icon: Heart, label: 'Cust. Health', adminOnly: true },
   { to: '/broadcast', icon: Radio, label: 'WA Broadcast', adminOnly: true },
   { to: '/boardroom', icon: Building2, label: 'AI Boardroom', adminOnly: true, badge: 'AI' },
 ];

@@ -5,6 +5,7 @@ import { useIsMobile } from './hooks/useIsMobile';
 import Layout from './components/Layout';
 import MobileTabBar from './components/layout/MobileTabBar';
 import CommandPalette from './components/CommandPalette';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Desktop pages
 import Login from './pages/Login';
@@ -12,6 +13,7 @@ import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
 import LeadDetail from './pages/LeadDetail';
 import Machines from './pages/Machines';
+import MachineDetail from './pages/MachineDetail';
 import QuotationBuilder from './pages/QuotationBuilder';
 import Quotations from './pages/Quotations';
 import Chat from './pages/Chat';
@@ -25,6 +27,7 @@ import CompetitorAnalysis from './pages/CompetitorAnalysis';
 import CustomerHealth from './pages/CustomerHealth';
 import Broadcast from './pages/Broadcast';
 import Boardroom from './pages/Boardroom';
+import Directory from './pages/Directory';
 
 // Mobile pages
 import MobileDashboard from './pages/mobile/MobileDashboard';
@@ -83,12 +86,14 @@ function AppRoutes() {
       <Route path="/leads" element={<DesktopRoute><Leads /></DesktopRoute>} />
       <Route path="/leads/:id" element={<DesktopRoute><LeadDetail /></DesktopRoute>} />
       <Route path="/machines" element={<DesktopRoute><Machines /></DesktopRoute>} />
+      <Route path="/machines/:id" element={<DesktopRoute><MachineDetail /></DesktopRoute>} />
       <Route path="/quotations" element={<DesktopRoute><Quotations /></DesktopRoute>} />
       <Route path="/quotations/new" element={<DesktopRoute><QuotationBuilder /></DesktopRoute>} />
       <Route path="/chat" element={<DesktopRoute><Chat /></DesktopRoute>} />
       <Route path="/payments" element={<DesktopRoute><Payments /></DesktopRoute>} />
       <Route path="/deliveries" element={<DesktopRoute><Deliveries /></DesktopRoute>} />
       <Route path="/reports"    element={<DesktopRoute adminOnly><Reports /></DesktopRoute>} />
+      <Route path="/directory"  element={<DesktopRoute><Directory /></DesktopRoute>} />
       <Route path="/goals"      element={<DesktopRoute adminOnly><Goals /></DesktopRoute>} />
       <Route path="/bi"         element={<DesktopRoute adminOnly><BusinessIntelligence /></DesktopRoute>} />
       <Route path="/competitor" element={<DesktopRoute adminOnly><CompetitorAnalysis /></DesktopRoute>} />
@@ -105,20 +110,22 @@ function App() {
   document.documentElement.setAttribute('data-theme', savedTheme);
 
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-        <CommandPalette />
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            duration: 3000,
-            style: { fontSize: 13, fontFamily: 'var(--font-primary)', background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-md)' },
-            success: { iconTheme: { primary: '#E8500A', secondary: '#fff' } },
-          }}
-        />
-      </BrowserRouter>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+          <CommandPalette />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 3000,
+              style: { fontSize: 13, fontFamily: 'var(--font-primary)', background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-md)' },
+              success: { iconTheme: { primary: '#E8500A', secondary: '#fff' } },
+            }}
+          />
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -19,6 +19,8 @@ export default function Payments() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newPayment, setNewPayment] = useState({ amount: '', mode: 'bank_transfer', status: 'pending' });
 
   useEffect(() => { loadPayments(); }, []);
 
@@ -58,6 +60,21 @@ export default function Payments() {
           <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Payment Tracker</h2>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '2px 0 0' }}>{pending.length} pending · {formatINR(totalPending)} due</p>
         </div>
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          style={{
+            background: 'var(--brand-primary)',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            padding: '10px 16px',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          + Add Payment
+        </button>
       </div>
 
       {/* Summary cards */}
@@ -75,6 +92,43 @@ export default function Payments() {
           </motion.div>
         ))}
       </div>
+
+      {/* Add Payment Form */}
+      {showAddForm && (
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, marginBottom: 24 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Add New Payment</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Lead ID *</label>
+              <input type="text" placeholder="Lead ID" style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13 }} value={newPayment.lead_id || ''} onChange={e => setNewPayment(prev => ({ ...prev, lead_id: e.target.value }))} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Amount (₹) *</label>
+              <input type="number" placeholder="0" style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13 }} value={newPayment.amount || ''} onChange={e => setNewPayment(prev => ({ ...prev, amount: e.target.value }))} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Mode</label>
+              <select style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13 }} value={newPayment.mode || ''} onChange={e => setNewPayment(prev => ({ ...prev, mode: e.target.value }))}>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="upi">UPI</option>
+                <option value="cash">Cash</option>
+                <option value="cheque">Cheque</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Status</label>
+              <select style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13 }} value={newPayment.status || 'pending'} onChange={e => setNewPayment(prev => ({ ...prev, status: e.target.value }))}>
+                <option value="pending">Pending</option>
+                <option value="partial">Partial</option>
+                <option value="received">Received</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => { setShowAddForm(false); setNewPayment({ amount: '', mode: 'bank_transfer', status: 'pending' }); }} style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {loading ? <TableSkeleton rows={5} /> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
