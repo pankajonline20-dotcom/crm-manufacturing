@@ -32,6 +32,8 @@ app.use(cors({
     'http://localhost:5175',
     'http://localhost:5176',
     /\.vercel\.app$/,
+    'https://salessaathi.com',
+    'https://www.salessaathi.com',
   ],
   credentials: true
 }));
