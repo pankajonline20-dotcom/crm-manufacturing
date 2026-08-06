@@ -10,9 +10,7 @@ timeout /t 2 /nobreak >nul
 start "CRM Frontend" cmd /k "cd /d %~dp0frontend && npm run dev"
 
 echo.
-echo CRM started!
+echo SalesSaathi started!
 echo Backend:  http://localhost:3001
 echo Frontend: http://localhost:5173
-echo.
-echo Login: admin@salessaathi.com / admin123
 pause

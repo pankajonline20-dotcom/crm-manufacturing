@@ -84,20 +84,6 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign In →'}
             </button>
           </form>
-
-          <div style={{ marginTop: 24, padding: '14px 16px', background: 'var(--bg-app)', borderRadius: 10, border: '1px solid var(--border)' }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>Demo Credentials</p>
-            {[
-              { role: 'Admin', email: 'admin@salessaathi.com', pass: 'admin123' },
-              { role: 'Agent', email: 'rahul@salessaathi.com', pass: 'agent123' },
-            ].map(c => (
-              <button key={c.role} onClick={() => setForm({ email: c.email, password: c.pass })}
-                style={{ display: 'flex', width: '100%', justifyContent: 'space-between', padding: '6px 0', background: 'none', border: 'none', cursor: 'pointer', borderBottom: c.role === 'Admin' ? '1px solid var(--border)' : 'none', marginBottom: c.role === 'Admin' ? 4 : 0 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{c.role}: {c.email}</span>
-                <span style={{ fontSize: 11, color: 'var(--brand-primary)', fontWeight: 700 }}>Use this →</span>
-              </button>
-            ))}
-          </div>
         </motion.div>
       </div>
     </div>

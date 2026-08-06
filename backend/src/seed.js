@@ -236,8 +236,6 @@ function seedDatabase() {
     `).run(total);
 
     console.log('Database seeded successfully!');
-    console.log('Admin login: admin@salessaathi.com / admin123');
-    console.log('Agent login: rahul@salessaathi.com / agent123');
   } catch (err) {
     console.error('Seeding error:', err.message);
     throw err;
