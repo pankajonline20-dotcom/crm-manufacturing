@@ -1,9 +1,12 @@
 {
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/dist",
+  "projects": {
+    "frontend": {
+      "rootDirectory": "frontend"
+    }
+  },
   "routes": [
     {
-      "src": "^/(?!api).*",
+      "src": "/(.*)",
       "dest": "/index.html"
     }
   ]
