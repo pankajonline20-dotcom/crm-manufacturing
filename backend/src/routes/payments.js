@@ -41,7 +41,7 @@ router.post('/:id/send-reminder', (req, res) => {
   db.prepare(`UPDATE payments SET reminder_count = reminder_count + 1, last_reminder_at = CURRENT_TIMESTAMP WHERE id = ?`).run(req.params.id);
 
   const amount = payment.amount ? `₹${Number(payment.amount).toLocaleString('en-IN')}` : 'the amount';
-  const message = `Hi ${payment.lead_name}, yeh Heat Press CRM ki taraf se reminder hai. Aapki payment ${amount} abhi pending hai. Please confirm karein. Dhanyawad!`;
+  const message = `Hi ${payment.lead_name}, yeh SalesSaathi ki taraf se reminder hai. Aapki payment ${amount} abhi pending hai. Please confirm karein. Dhanyawad!`;
   const waLink = `https://wa.me/91${payment.lead_phone}?text=${encodeURIComponent(message)}`;
 
   res.json({ wa_link: waLink, message });

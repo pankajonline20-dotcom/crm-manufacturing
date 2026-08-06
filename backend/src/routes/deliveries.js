@@ -64,7 +64,7 @@ router.post('/:id/send-followup', (req, res) => {
 
   if (!delivery) return res.status(404).json({ error: 'Delivery not found' });
 
-  const message = `Hi ${delivery.lead_name}, ${delivery.model_name} kaisi chal rahi hai? Koi problem toh nahi? Hum hamesha available hain. - Heat Press CRM Team`;
+  const message = `Hi ${delivery.lead_name}, ${delivery.model_name} kaisi chal rahi hai? Koi problem toh nahi? Hum hamesha available hain. - SalesSaathi Team`;
   const waLink = `https://wa.me/91${delivery.lead_phone}?text=${encodeURIComponent(message)}`;
 
   res.json({ wa_link: waLink, message });

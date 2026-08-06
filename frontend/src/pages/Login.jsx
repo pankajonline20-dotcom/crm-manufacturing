@@ -26,7 +26,7 @@ export default function Login() {
           <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <Zap size={32} color="white" />
           </div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: 'white', margin: '0 0 12px', lineHeight: 1.2 }}>Heat Press CRM</h1>
+          <h1 style={{ fontSize: 32, fontWeight: 800, color: 'white', margin: '0 0 12px', lineHeight: 1.2 }}>🚀 SalesSaathi</h1>
           <p style={{ fontSize: 15, color: 'var(--text-sidebar)', lineHeight: 1.6, margin: 0 }}>
             Your complete sales workspace. Manage leads, send quotes, track payments — all in one place.
           </p>
@@ -53,7 +53,7 @@ export default function Login() {
             <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
               <Zap size={26} color="white" />
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Heat Press CRM</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>🚀 SalesSaathi</h2>
           </div>
 
           <div>
@@ -64,7 +64,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label className="label">Email address</label>
-              <input type="email" className="input" placeholder="admin@heatpresscrm.com"
+              <input type="email" className="input" placeholder="admin@salessaathi.com"
                 value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
             </div>
             <div>
@@ -88,8 +88,8 @@ export default function Login() {
           <div style={{ marginTop: 24, padding: '14px 16px', background: 'var(--bg-app)', borderRadius: 10, border: '1px solid var(--border)' }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>Demo Credentials</p>
             {[
-              { role: 'Admin', email: 'admin@heatpresscrm.com', pass: 'admin123' },
-              { role: 'Agent', email: 'rahul@heatpresscrm.com', pass: 'agent123' },
+              { role: 'Admin', email: 'admin@salessaathi.com', pass: 'admin123' },
+              { role: 'Agent', email: 'rahul@salessaathi.com', pass: 'agent123' },
             ].map(c => (
               <button key={c.role} onClick={() => setForm({ email: c.email, password: c.pass })}
                 style={{ display: 'flex', width: '100%', justifyContent: 'space-between', padding: '6px 0', background: 'none', border: 'none', cursor: 'pointer', borderBottom: c.role === 'Admin' ? '1px solid var(--border)' : 'none', marginBottom: c.role === 'Admin' ? 4 : 0 }}>

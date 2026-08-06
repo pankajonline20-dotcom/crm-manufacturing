@@ -1,5 +1,5 @@
 @echo off
-echo Starting Heat Press CRM...
+echo Starting SalesSaathi...
 echo.
 
 echo [1/2] Starting Backend (port 3001)...
@@ -14,5 +14,5 @@ echo CRM started!
 echo Backend:  http://localhost:3001
 echo Frontend: http://localhost:5173
 echo.
-echo Login: admin@heatpresscrm.com / admin123
+echo Login: admin@salessaathi.com / admin123
 pause

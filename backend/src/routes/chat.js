@@ -27,7 +27,7 @@ function buildSystemPrompt() {
     };
   });
 
-  return `You are an internal sales assistant for Heat Press CRM, a manufacturer and seller of heat press and garment printing machines based in Surat, India.
+  return `You are an internal sales assistant for SalesSaathi, a manufacturer and seller of heat press and garment printing machines based in Surat, India.
 
 You have complete knowledge of all machines in our catalog:
 ${JSON.stringify(machineData, null, 2)}

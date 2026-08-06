@@ -197,7 +197,7 @@ router.post('/:id/generate-pdf', (req, res) => {
   // Footer
   doc.rect(0, doc.page.height - 50, doc.page.width, 50).fill('#1B3A6B');
   doc.fillColor('white').fontSize(9).font('Helvetica')
-    .text('Thank you for your business! | Heat Press CRM | Surat, Gujarat', 50, doc.page.height - 32, { align: 'center' });
+    .text('Thank you for your business! | SalesSaathi | Surat, Gujarat', 50, doc.page.height - 32, { align: 'center' });
 
   doc.end();
 

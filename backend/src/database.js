@@ -342,6 +342,177 @@ function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_directory_city ON directory_contacts(city);
       CREATE INDEX IF NOT EXISTS idx_directory_ref ON directory_contacts(customer_ref_number);
       CREATE INDEX IF NOT EXISTS idx_customer_visits_date ON customer_visits(visit_date);
+
+      CREATE TABLE IF NOT EXISTS production_stages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        machine_id INTEGER REFERENCES machines(id),
+        order_id TEXT,
+        stage TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        started_at datetime,
+        completed_at datetime,
+        worker_id INTEGER REFERENCES users(id),
+        notes TEXT,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS daily_expenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        expense_date DATE DEFAULT CURRENT_DATE,
+        category TEXT NOT NULL,
+        amount REAL NOT NULL,
+        description TEXT,
+        paid_by INTEGER REFERENCES users(id),
+        payment_method TEXT DEFAULT 'cash',
+        receipt_url TEXT,
+        created_by INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS monthly_goals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        month TEXT NOT NULL,
+        goal_type TEXT NOT NULL,
+        target_value REAL NOT NULL,
+        actual_value REAL DEFAULT 0,
+        owner INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS activity_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER REFERENCES users(id),
+        action TEXT NOT NULL,
+        entity_type TEXT,
+        entity_id INTEGER,
+        details TEXT,
+        ip_address TEXT,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS alerts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        alert_type TEXT NOT NULL,
+        severity TEXT DEFAULT 'medium',
+        title TEXT NOT NULL,
+        message TEXT,
+        entity_type TEXT,
+        entity_id INTEGER,
+        is_resolved INTEGER DEFAULT 0,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_production_stages_machine ON production_stages(machine_id);
+      CREATE INDEX IF NOT EXISTS idx_production_stages_stage ON production_stages(stage);
+      CREATE INDEX IF NOT EXISTS idx_daily_expenses_date ON daily_expenses(expense_date);
+      CREATE INDEX IF NOT EXISTS idx_monthly_goals_month ON monthly_goals(month);
+      CREATE INDEX IF NOT EXISTS idx_activity_log_user ON activity_log(user_id);
+      CREATE INDEX IF NOT EXISTS idx_activity_log_created ON activity_log(created_at);
+      CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON alerts(is_resolved);
+
+      CREATE TABLE IF NOT EXISTS daily_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry_date DATE DEFAULT CURRENT_DATE,
+        cash_in REAL DEFAULT 0,
+        cash_out REAL DEFAULT 0,
+        welding_completed INTEGER DEFAULT 0,
+        sent_to_coating INTEGER DEFAULT 0,
+        returned_from_coating INTEGER DEFAULT 0,
+        fitting_completed INTEGER DEFAULT 0,
+        testing_completed INTEGER DEFAULT 0,
+        dispatch_count INTEGER DEFAULT 0,
+        sales_calls INTEGER DEFAULT 0,
+        orders_count INTEGER DEFAULT 0,
+        remarks TEXT,
+        created_by INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS finance_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry_date DATE DEFAULT CURRENT_DATE,
+        type TEXT NOT NULL,
+        customer_name TEXT,
+        vendor_name TEXT,
+        amount REAL NOT NULL,
+        category TEXT,
+        payment_mode TEXT,
+        remarks TEXT,
+        created_by INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS production_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry_date DATE DEFAULT CURRENT_DATE,
+        machine_model TEXT,
+        welding_done INTEGER DEFAULT 0,
+        sent_to_coating INTEGER DEFAULT 0,
+        returned_count INTEGER DEFAULT 0,
+        pending INTEGER DEFAULT 0,
+        remarks TEXT,
+        created_by INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS fitting_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry_date DATE DEFAULT CURRENT_DATE,
+        machine TEXT,
+        testing_completed INTEGER DEFAULT 0,
+        passed INTEGER DEFAULT 0,
+        failed INTEGER DEFAULT 0,
+        ready_for_dispatch INTEGER DEFAULT 0,
+        created_by INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS dispatch_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry_date DATE DEFAULT CURRENT_DATE,
+        customer_name TEXT,
+        machine_model TEXT,
+        transport_company TEXT,
+        lr_number TEXT,
+        state TEXT,
+        delivered INTEGER DEFAULT 0,
+        created_by INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS sales_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry_date DATE DEFAULT CURRENT_DATE,
+        sales_person_id INTEGER REFERENCES users(id),
+        calls INTEGER DEFAULT 0,
+        followups INTEGER DEFAULT 0,
+        videos_sent INTEGER DEFAULT 0,
+        quotations INTEGER DEFAULT 0,
+        orders INTEGER DEFAULT 0,
+        order_value REAL DEFAULT 0,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS order_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_date DATE DEFAULT CURRENT_DATE,
+        customer_name TEXT NOT NULL,
+        machine_model TEXT NOT NULL,
+        quantity INTEGER DEFAULT 1,
+        amount REAL NOT NULL,
+        advance REAL DEFAULT 0,
+        status TEXT DEFAULT 'new',
+        created_by INTEGER REFERENCES users(id),
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_daily_entries_date ON daily_entries(entry_date);
+      CREATE INDEX IF NOT EXISTS idx_finance_entries_date ON finance_entries(entry_date);
+      CREATE INDEX IF NOT EXISTS idx_production_entries_date ON production_entries(entry_date);
+      CREATE INDEX IF NOT EXISTS idx_fitting_entries_date ON fitting_entries(entry_date);
+      CREATE INDEX IF NOT EXISTS idx_dispatch_entries_date ON dispatch_entries(entry_date);
+      CREATE INDEX IF NOT EXISTS idx_sales_entries_date ON sales_entries(entry_date);
+      CREATE INDEX IF NOT EXISTS idx_order_entries_date ON order_entries(order_date);
     `);
     console.log('Database initialized');
   } catch (err) {

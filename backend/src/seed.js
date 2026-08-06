@@ -3,7 +3,7 @@ const { db } = require('./database');
 
 function seedDatabase() {
   try {
-    const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@heatpresscrm.com');
+    const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@salessaathi.com');
     if (existingAdmin) {
       console.log('Database already seeded.');
       return;
@@ -13,9 +13,9 @@ function seedDatabase() {
     const adminHash = bcrypt.hashSync('admin123', 10);
     const agentHash = bcrypt.hashSync('agent123', 10);
 
-    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Pankaj Mehta', 'admin@heatpresscrm.com', adminHash, 'admin');
-    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Rahul Shah', 'rahul@heatpresscrm.com', agentHash, 'agent');
-    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Priya Patel', 'priya@heatpresscrm.com', agentHash, 'agent');
+    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Pankaj Mehta', 'admin@salessaathi.com', adminHash, 'admin');
+    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Rahul Shah', 'rahul@salessaathi.com', agentHash, 'agent');
+    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Priya Patel', 'priya@salessaathi.com', agentHash, 'agent');
 
     // Machines
     const machines = [
@@ -236,8 +236,8 @@ function seedDatabase() {
     `).run(total);
 
     console.log('Database seeded successfully!');
-    console.log('Admin login: admin@heatpresscrm.com / admin123');
-    console.log('Agent login: rahul@heatpresscrm.com / agent123');
+    console.log('Admin login: admin@salessaathi.com / admin123');
+    console.log('Agent login: rahul@salessaathi.com / agent123');
   } catch (err) {
     console.error('Seeding error:', err.message);
     throw err;

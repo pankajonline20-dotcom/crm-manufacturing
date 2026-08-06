@@ -43,4 +43,57 @@ router.get('/me', authMiddleware, (req, res) => {
   res.json(user);
 });
 
+// Get all users (admin only)
+router.get('/users', authMiddleware, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  const users = db.prepare('SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC').all();
+  res.json(users);
+});
+
+// Create new user (admin only)
+router.post('/users', authMiddleware, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  const { name, email, password, role = 'agent' } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'Name, email, and password required' });
+  }
+
+  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  if (existing) {
+    return res.status(409).json({ error: 'Email already exists' });
+  }
+
+  try {
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    const result = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)').run(name, email, hashedPassword, role);
+    const newUser = db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?').get(result.lastInsertRowid);
+    res.status(201).json({ success: true, user: newUser });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+// Delete user (admin only)
+router.delete('/users/:id', authMiddleware, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  if (req.user.id === parseInt(req.params.id)) {
+    return res.status(400).json({ error: 'Cannot delete yourself' });
+  }
+  db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+  res.json({ success: true, message: 'User deleted' });
+});
+
+// Update user role (admin only)
+router.put('/users/:id/role', authMiddleware, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  const { role } = req.body;
+  if (!['admin', 'agent'].includes(role)) {
+    return res.status(400).json({ error: 'Invalid role. Must be admin or agent' });
+  }
+  db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, req.params.id);
+  const user = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(req.params.id);
+  res.json(user);
+});
+
 module.exports = router;

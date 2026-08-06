@@ -18,7 +18,10 @@ export default function Machines() {
   const [uploading, setUploading] = useState(null);
   const [waTarget, setWaTarget] = useState(null);
 
-  const emptyForm = { model_name: '', category: '', price: '', gst_percent: 18, description: '', is_active: true };
+  const emptyForm = {
+    model_name: '', category: '', price: '', gst_percent: 18, description: '',
+    specifications: {}, faqs: [], is_active: true
+  };
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => { loadMachines(); }, []);
@@ -49,10 +52,26 @@ export default function Machines() {
 
   const handleEdit = (m) => {
     setEditMachine(m);
-    setForm({
-      model_name: m.model_name, category: m.category || '', price: m.price || '',
-      gst_percent: m.gst_percent || 18, description: m.description || '', is_active: !!m.is_active
-    });
+    try {
+      const specs = typeof m.specifications === 'string' ? JSON.parse(m.specifications || '{}') : m.specifications || {};
+      const faqs = typeof m.faqs === 'string' ? JSON.parse(m.faqs || '[]') : m.faqs || [];
+      setForm({
+        model_name: m.model_name,
+        category: m.category || '',
+        price: m.price || '',
+        gst_percent: m.gst_percent || 18,
+        description: m.description || '',
+        specifications: specs,
+        faqs: faqs,
+        is_active: !!m.is_active
+      });
+    } catch {
+      setForm({
+        model_name: m.model_name, category: m.category || '', price: m.price || '',
+        gst_percent: m.gst_percent || 18, description: m.description || '',
+        specifications: {}, faqs: [], is_active: !!m.is_active
+      });
+    }
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -171,6 +190,41 @@ export default function Machines() {
               <label className="label">Description</label>
               <textarea className="input" rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
             </div>
+
+            <div className="sm:col-span-2">
+              <label className="label">Specifications (JSON)</label>
+              <textarea
+                className="input"
+                rows={4}
+                placeholder='{"Power": "2000W", "Warranty": "2 Years"}'
+                value={typeof form.specifications === 'string' ? form.specifications : JSON.stringify(form.specifications)}
+                onChange={e => {
+                  try {
+                    setForm(f => ({ ...f, specifications: JSON.parse(e.target.value) }));
+                  } catch {
+                    setForm(f => ({ ...f, specifications: e.target.value }));
+                  }
+                }}
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="label">FAQs (JSON)</label>
+              <textarea
+                className="input"
+                rows={4}
+                placeholder='[{"question": "Warranty?", "answer": "2 years"}]'
+                value={typeof form.faqs === 'string' ? form.faqs : JSON.stringify(form.faqs)}
+                onChange={e => {
+                  try {
+                    setForm(f => ({ ...f, faqs: JSON.parse(e.target.value) }));
+                  } catch {
+                    setForm(f => ({ ...f, faqs: e.target.value }));
+                  }
+                }}
+              />
+            </div>
+
             {editMachine && (
               <div className="sm:col-span-2 flex items-center gap-2">
                 <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />

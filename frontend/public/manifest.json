@@ -1,7 +1,7 @@
 {
-  "name": "Heat Press CRM",
-  "short_name": "HP CRM",
-  "description": "CRM for Heat Press & Garment Printing Business",
+  "name": "SalesSaathi",
+  "short_name": "SalesSaathi",
+  "description": "CRM & Operations Management Platform",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1B3A6B",

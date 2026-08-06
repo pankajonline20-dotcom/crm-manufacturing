@@ -28,6 +28,8 @@ import CustomerHealth from './pages/CustomerHealth';
 import Broadcast from './pages/Broadcast';
 import Boardroom from './pages/Boardroom';
 import Directory from './pages/Directory';
+import CEODashboard from './pages/CEODashboard';
+import Users from './pages/Users';
 
 // Mobile pages
 import MobileDashboard from './pages/mobile/MobileDashboard';
@@ -93,12 +95,14 @@ function AppRoutes() {
       <Route path="/payments" element={<DesktopRoute><Payments /></DesktopRoute>} />
       <Route path="/deliveries" element={<DesktopRoute><Deliveries /></DesktopRoute>} />
       <Route path="/reports"    element={<DesktopRoute adminOnly><Reports /></DesktopRoute>} />
+      <Route path="/ceo"        element={<DesktopRoute adminOnly><CEODashboard /></DesktopRoute>} />
+      <Route path="/users"      element={<DesktopRoute adminOnly><Users /></DesktopRoute>} />
       <Route path="/directory"  element={<DesktopRoute><Directory /></DesktopRoute>} />
       <Route path="/goals"      element={<DesktopRoute adminOnly><Goals /></DesktopRoute>} />
       <Route path="/bi"         element={<DesktopRoute adminOnly><BusinessIntelligence /></DesktopRoute>} />
       <Route path="/competitor" element={<DesktopRoute adminOnly><CompetitorAnalysis /></DesktopRoute>} />
       <Route path="/health"     element={<DesktopRoute adminOnly><CustomerHealth /></DesktopRoute>} />
-      <Route path="/broadcast"  element={<DesktopRoute adminOnly><Broadcast /></DesktopRoute>} />
+      <Route path="/broadcast"  element={<DesktopRoute><Broadcast /></DesktopRoute>} />
       <Route path="/boardroom"  element={<DesktopRoute adminOnly><Boardroom /></DesktopRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

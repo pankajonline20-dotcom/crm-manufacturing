@@ -19,6 +19,8 @@ const advancedRoutes = require('./src/routes/advanced');
 const boardroomRoutes = require('./src/routes/boardroom');
 const visitsRoutes = require('./src/routes/visits');
 const directoryRoutes = require('./src/routes/directory');
+const dashboardRoutes = require('./src/routes/dashboard');
+const dailyEntriesRoutes = require('./src/routes/daily-entries');
 
 const app = express();
 
@@ -49,6 +51,8 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/visits', visitsRoutes);
 app.use('/api/directory', directoryRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/entries', dailyEntriesRoutes);
 app.use('/api', advancedRoutes);
 app.use('/api', boardroomRoutes);
 

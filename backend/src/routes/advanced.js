@@ -194,7 +194,7 @@ router.put('/customer-health/:leadId', adminOnly, (req, res) => {
 
 // ─── MODULE 6: WHATSAPP BROADCAST ─────────────────────────────────────────────
 
-router.get('/broadcasts', adminOnly, (req, res) => {
+router.get('/broadcasts', (req, res) => {
   const broadcasts = db.prepare(`
     SELECT b.*, u.name as created_by_name FROM broadcasts b
     LEFT JOIN users u ON b.created_by = u.id
@@ -203,7 +203,7 @@ router.get('/broadcasts', adminOnly, (req, res) => {
   res.json(broadcasts);
 });
 
-router.post('/broadcasts/preview', adminOnly, (req, res) => {
+router.post('/broadcasts/preview', (req, res) => {
   const { segment_filters } = req.body;
   let query = 'SELECT COUNT(*) as count FROM leads WHERE 1=1';
   const params = [];
@@ -219,7 +219,7 @@ router.post('/broadcasts/preview', adminOnly, (req, res) => {
   res.json({ count });
 });
 
-router.post('/broadcasts', adminOnly, (req, res) => {
+router.post('/broadcasts', (req, res) => {
   const { name, message_template, segment_filters } = req.body;
   if (!name || !message_template) return res.status(400).json({ error: 'name and message_template required' });
 
@@ -253,7 +253,7 @@ router.post('/broadcasts', adminOnly, (req, res) => {
   res.json({ broadcast_id: broadcastId, sent_to: targetLeads.length, sample_links: logs.map(l => l.wa_link) });
 });
 
-router.get('/broadcasts/:id/logs', adminOnly, (req, res) => {
+router.get('/broadcasts/:id/logs', (req, res) => {
   const logs = db.prepare(`
     SELECT bl.*, l.name as lead_name FROM broadcast_logs bl
     LEFT JOIN leads l ON bl.lead_id = l.id
