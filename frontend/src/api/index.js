@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://crm-manufacturing-production.up.railway.app/api',
   timeout: 30000,
 });
 
