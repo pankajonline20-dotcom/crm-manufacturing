@@ -104,4 +104,52 @@ router.put('/users/:id/role', authMiddleware, (req, res) => {
   res.json(user);
 });
 
+// Clear all data (admin only)
+router.post('/clear-all-data', authMiddleware, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+
+  try {
+    db.prepare('PRAGMA foreign_keys = OFF').run();
+
+    // Delete all data from all tables in correct order
+    db.prepare('DELETE FROM call_logs').run();
+    db.prepare('DELETE FROM payments').run();
+    db.prepare('DELETE FROM deliveries').run();
+    db.prepare('DELETE FROM quotations').run();
+    db.prepare('DELETE FROM customer_visits').run();
+    db.prepare('DELETE FROM broadcast_logs').run();
+    db.prepare('DELETE FROM customer_health').run();
+    db.prepare('DELETE FROM leads').run();
+    db.prepare('DELETE FROM call_logs').run();
+    db.prepare('DELETE FROM broadcasts').run();
+    db.prepare('DELETE FROM machine_media').run();
+    db.prepare('DELETE FROM machines').run();
+    db.prepare('DELETE FROM knowledge_base').run();
+    db.prepare('DELETE FROM goals').run();
+    db.prepare('DELETE FROM board_actions').run();
+    db.prepare('DELETE FROM board_meetings').run();
+    db.prepare('DELETE FROM kpi_snapshots').run();
+    db.prepare('DELETE FROM production_stages').run();
+    db.prepare('DELETE FROM daily_expenses').run();
+    db.prepare('DELETE FROM monthly_goals').run();
+    db.prepare('DELETE FROM activity_log').run();
+    db.prepare('DELETE FROM alerts').run();
+    db.prepare('DELETE FROM daily_entries').run();
+    db.prepare('DELETE FROM finance_entries').run();
+    db.prepare('DELETE FROM production_entries').run();
+    db.prepare('DELETE FROM fitting_entries').run();
+    db.prepare('DELETE FROM dispatch_entries').run();
+    db.prepare('DELETE FROM sales_entries').run();
+    db.prepare('DELETE FROM order_entries').run();
+    db.prepare('DELETE FROM directory_contacts').run();
+
+    db.prepare('PRAGMA foreign_keys = ON').run();
+
+    res.json({ message: 'All data cleared successfully' });
+  } catch (err) {
+    console.error('Clear data error:', err);
+    res.status(500).json({ error: 'Failed to clear data', details: err.message });
+  }
+});
+
 module.exports = router;

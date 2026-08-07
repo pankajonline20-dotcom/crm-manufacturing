@@ -17,6 +17,9 @@ function seedDatabase() {
     db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Rahul Shah', 'rahul@salessaathi.com', agentHash, 'agent');
     db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Priya Patel', 'priya@salessaathi.com', agentHash, 'agent');
 
+    console.log('Users created. Skipping demo leads/quotations/payments.');
+    return;
+
     // Machines
     const machines = [
       {
