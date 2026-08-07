@@ -239,7 +239,7 @@ export default function LeadDetail() {
           </div>
 
           {/* Action buttons */}
-          {!isNew && !editing && (
+          {!isNew && !editing && lead && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <a href={waLink(lead.phone)} target="_blank" rel="noreferrer"
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#25D366', color: 'white', borderRadius: 10, padding: '10px 16px', textDecoration: 'none', fontWeight: 600, fontSize: 13 }}>
