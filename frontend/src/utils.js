@@ -21,6 +21,7 @@ export function formatPhone(phone) {
 }
 
 export function waLink(phone, message = '') {
+  if (!phone) return '#';
   const num = `91${phone.replace(/\D/g, '')}`;
   return `https://wa.me/${num}${message ? '?text=' + encodeURIComponent(message) : ''}`;
 }
