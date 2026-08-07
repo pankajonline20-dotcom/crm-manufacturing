@@ -55,7 +55,11 @@ export default function Payments() {
       await api.delete(`/payments/${id}`);
       await loadPayments();
       toast.success('Payment deleted!');
-    } catch { toast.error('Delete failed'); }
+    } catch (err) {
+      console.error('Delete error:', err);
+      const msg = err.response?.data?.error || err.response?.data?.details || err.message || 'Delete failed';
+      toast.error(msg);
+    }
   };
 
   const pending = payments.filter(p => p.status !== 'received');

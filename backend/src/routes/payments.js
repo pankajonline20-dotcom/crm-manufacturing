@@ -49,13 +49,22 @@ router.post('/:id/send-reminder', (req, res) => {
 
 router.delete('/:id', (req, res) => {
   try {
-    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+    console.log('Delete payment request:', { id: req.params.id, role: req.user?.role });
+
+    if (req.user.role !== 'admin') {
+      console.log('Permission denied: user role is', req.user.role);
+      return res.status(403).json({ error: 'Admin only' });
+    }
 
     const payment = db.prepare('SELECT id FROM payments WHERE id = ?').get(req.params.id);
-    if (!payment) return res.status(404).json({ error: 'Payment not found' });
+    if (!payment) {
+      console.log('Payment not found:', req.params.id);
+      return res.status(404).json({ error: 'Payment not found' });
+    }
 
-    db.prepare('DELETE FROM payments WHERE id = ?').run(req.params.id);
-    res.json({ message: 'Payment deleted' });
+    const result = db.prepare('DELETE FROM payments WHERE id = ?').run(req.params.id);
+    console.log('Payment deleted:', { id: req.params.id, changes: result.changes });
+    res.json({ message: 'Payment deleted', changes: result.changes });
   } catch (err) {
     console.error('Delete payment error:', err);
     res.status(500).json({ error: 'Delete failed', details: err.message });
