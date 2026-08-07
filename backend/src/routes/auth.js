@@ -6,6 +6,28 @@ const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
+router.post('/init-admin', (req, res) => {
+  try {
+    const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+    if (userCount > 0) {
+      return res.status(400).json({ error: 'Users already exist. Use regular login.' });
+    }
+
+    const adminHash = bcrypt.hashSync('admin123', 10);
+    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run(
+      'Pankaj Mehta',
+      'admin@salessaathi.com',
+      adminHash,
+      'admin'
+    );
+
+    res.json({ message: 'Admin created!', email: 'admin@salessaathi.com', password: 'admin123' });
+  } catch (err) {
+    console.error('Init admin error:', err);
+    res.status(500).json({ error: 'Failed', details: err.message });
+  }
+});
+
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
