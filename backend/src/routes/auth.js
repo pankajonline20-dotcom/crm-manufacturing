@@ -11,6 +11,21 @@ router.get('/debug-users', (req, res) => {
   res.json(users);
 });
 
+router.post('/update-emails', (req, res) => {
+  try {
+    const users = db.prepare('SELECT id, email FROM users').all();
+    for (const user of users) {
+      const newEmail = user.email.replace('@heatpresscrm.com', '@salessaathi.com');
+      db.prepare('UPDATE users SET email = ? WHERE id = ?').run(newEmail, user.id);
+    }
+    const updated = db.prepare('SELECT id, name, email, role FROM users').all();
+    res.json({ message: 'All emails updated!', users: updated });
+  } catch (err) {
+    console.error('Update emails error:', err);
+    res.status(500).json({ error: 'Failed', details: err.message });
+  }
+});
+
 router.post('/init-admin', (req, res) => {
   try {
     const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
