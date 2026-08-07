@@ -18,7 +18,8 @@ export default function Quotations() {
     setGenerating(q.id);
     try {
       const { data } = await api.post(`/quotations/${q.id}/generate-pdf`);
-      window.open(`http://localhost:3001${data.pdf_url}`, '_blank');
+      const pdfUrl = `https://crm-manufacturing-production.up.railway.app${data.pdf_url}`;
+      window.open(pdfUrl, '_blank');
       toast.success('PDF ready!');
     } catch { toast.error('PDF generation failed'); }
     finally { setGenerating(null); }
@@ -31,9 +32,9 @@ export default function Quotations() {
 
   return (
     <div className="p-4 md:p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap md:flex-nowrap">
         <h2 className="text-xl font-bold text-gray-900">Quotations</h2>
-        <Link to="/quotations/new" className="btn-primary flex items-center gap-1.5 text-sm">
+        <Link to="/quotations/new" className="btn-primary flex items-center gap-1.5 text-sm whitespace-nowrap">
           <Plus size={16} /> New Quote
         </Link>
       </div>
