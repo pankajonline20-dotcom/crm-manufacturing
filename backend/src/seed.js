@@ -3,13 +3,13 @@ const { db } = require('./database');
 
 function seedDatabase() {
   try {
-    const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@salessaathi.com');
-    if (existingAdmin) {
-      console.log('Database already seeded.');
+    const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+    if (userCount > 0) {
+      console.log('Database already seeded. Skipping user creation.');
       return;
     }
 
-    // Users
+    // Users - only seed if no users exist
     const adminHash = bcrypt.hashSync('admin123', 10);
     const agentHash = bcrypt.hashSync('agent123', 10);
 
