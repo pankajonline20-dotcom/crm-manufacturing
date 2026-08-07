@@ -47,4 +47,19 @@ router.post('/:id/send-reminder', (req, res) => {
   res.json({ wa_link: waLink, message });
 });
 
+router.delete('/:id', (req, res) => {
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+
+    const payment = db.prepare('SELECT id FROM payments WHERE id = ?').get(req.params.id);
+    if (!payment) return res.status(404).json({ error: 'Payment not found' });
+
+    db.prepare('DELETE FROM payments WHERE id = ?').run(req.params.id);
+    res.json({ message: 'Payment deleted' });
+  } catch (err) {
+    console.error('Delete payment error:', err);
+    res.status(500).json({ error: 'Delete failed', details: err.message });
+  }
+});
+
 module.exports = router;

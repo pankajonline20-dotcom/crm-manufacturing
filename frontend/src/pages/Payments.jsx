@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import api from '../api';
 import toast from 'react-hot-toast';
-import { CreditCard, MessageCircle, Check, Loader2, X, ArrowUpRight } from 'lucide-react';
+import { CreditCard, MessageCircle, Check, Loader2, X, ArrowUpRight, Trash2 } from 'lucide-react';
 import { formatINR, formatDate } from '../utils';
 import { TableSkeleton } from '../components/ui/Skeleton';
 
@@ -47,6 +47,15 @@ export default function Payments() {
       await loadPayments();
       toast.success('Reminder sent via WhatsApp!');
     } catch { toast.error('Failed'); }
+  };
+
+  const deletePayment = async (id) => {
+    if (!window.confirm('Delete this payment?')) return;
+    try {
+      await api.delete(`/payments/${id}`);
+      await loadPayments();
+      toast.success('Payment deleted!');
+    } catch { toast.error('Delete failed'); }
   };
 
   const pending = payments.filter(p => p.status !== 'received');
@@ -201,6 +210,11 @@ export default function Payments() {
                         <MessageCircle size={13} /> Send Reminder
                       </button>
                     )}
+                    <button onClick={() => deletePayment(p.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: '#EF4444', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'opacity 150ms' }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '0.85'} onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+                      <Trash2 size={13} /> Delete
+                    </button>
                   </div>
                 )}
               </motion.div>
