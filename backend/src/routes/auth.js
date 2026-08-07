@@ -76,12 +76,19 @@ router.post('/users', authMiddleware, (req, res) => {
 
 // Delete user (admin only)
 router.delete('/users/:id', authMiddleware, (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
-  if (req.user.id === parseInt(req.params.id)) {
-    return res.status(400).json({ error: 'Cannot delete yourself' });
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+    if (req.user.id === parseInt(req.params.id)) {
+      return res.status(400).json({ error: 'Cannot delete yourself' });
+    }
+    const result = db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ success: true, message: 'User deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Delete failed', details: err.message });
   }
-  db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
-  res.json({ success: true, message: 'User deleted' });
 });
 
 // Update user role (admin only)
