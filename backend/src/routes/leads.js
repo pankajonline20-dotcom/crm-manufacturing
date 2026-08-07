@@ -129,14 +129,17 @@ router.put('/:id', (req, res) => {
   res.json(updated);
 });
 
-router.delete('/:id', (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
-  const lead = db.prepare('SELECT id FROM leads WHERE id = ?').get(req.params.id);
-  if (!lead) return res.status(404).json({ error: 'Lead not found' });
+router.delete('/:id', authMiddleware, (req, res) => {
+  try {
+    const lead = db.prepare('SELECT id FROM leads WHERE id = ?').get(req.params.id);
+    if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
-  db.prepare('DELETE FROM call_logs WHERE lead_id = ?').run(req.params.id);
-  db.prepare('DELETE FROM leads WHERE id = ?').run(req.params.id);
-  res.json({ message: 'Lead deleted' });
+    db.prepare('DELETE FROM call_logs WHERE lead_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM leads WHERE id = ?').run(req.params.id);
+    res.json({ message: 'Lead deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Delete failed', details: err.message });
+  }
 });
 
 // Call logs
