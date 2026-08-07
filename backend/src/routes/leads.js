@@ -138,12 +138,14 @@ router.delete('/:id', authMiddleware, (req, res) => {
     db.prepare('PRAGMA foreign_keys = OFF').run();
 
     try {
-      // Delete related records
+      // Delete related records in order of dependency
       db.prepare('DELETE FROM call_logs WHERE lead_id = ?').run(req.params.id);
       db.prepare('DELETE FROM quotations WHERE lead_id = ?').run(req.params.id);
       db.prepare('DELETE FROM payments WHERE lead_id = ?').run(req.params.id);
       db.prepare('DELETE FROM deliveries WHERE lead_id = ?').run(req.params.id);
       db.prepare('DELETE FROM customer_visits WHERE lead_id = ?').run(req.params.id);
+      db.prepare('DELETE FROM broadcast_logs WHERE lead_id = ?').run(req.params.id);
+      db.prepare('DELETE FROM customer_health WHERE lead_id = ?').run(req.params.id);
 
       // Finally delete the lead
       db.prepare('DELETE FROM leads WHERE id = ?').run(req.params.id);
