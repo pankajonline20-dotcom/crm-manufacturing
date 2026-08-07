@@ -134,10 +134,18 @@ router.delete('/:id', authMiddleware, (req, res) => {
     const lead = db.prepare('SELECT id FROM leads WHERE id = ?').get(req.params.id);
     if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
+    // Delete related records
     db.prepare('DELETE FROM call_logs WHERE lead_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM quotations WHERE lead_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM payments WHERE lead_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM deliveries WHERE lead_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM visits WHERE lead_id = ?').run(req.params.id);
+
+    // Finally delete the lead
     db.prepare('DELETE FROM leads WHERE id = ?').run(req.params.id);
     res.json({ message: 'Lead deleted' });
   } catch (err) {
+    console.error('Delete lead error:', err);
     res.status(500).json({ error: 'Delete failed', details: err.message });
   }
 });
