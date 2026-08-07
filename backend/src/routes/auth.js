@@ -6,6 +6,11 @@ const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
+router.get('/debug-users', (req, res) => {
+  const users = db.prepare('SELECT id, name, email, role FROM users').all();
+  res.json(users);
+});
+
 router.post('/init-admin', (req, res) => {
   try {
     const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
