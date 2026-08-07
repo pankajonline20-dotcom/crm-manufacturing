@@ -110,9 +110,11 @@ export default function LeadDetail() {
   };
 
   const copyPhone = () => {
-    navigator.clipboard.writeText(lead.phone);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    if (lead?.phone) {
+      navigator.clipboard.writeText(lead.phone);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
   };
 
   if (loading) return (
@@ -160,13 +162,13 @@ export default function LeadDetail() {
                   <StatusBadge status={lead?.status} />
 
                   <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {lead?.phone && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Phone size={13} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                       <a href={`tel:+91${lead.phone}`} style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 600 }}>+91 {formatPhone(lead.phone)}</a>
                       <button onClick={copyPhone} className="btn-ghost" style={{ padding: '2px 6px', fontSize: 11 }}>
                         {copied ? <Check size={12} style={{ color: 'var(--status-won)' }} /> : <Copy size={12} />}
                       </button>
-                    </div>
+                    </div>}
                     {lead.email && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Mail size={13} style={{ color: 'var(--text-muted)' }} /><span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{lead.email}</span></div>}
                   </div>
 
