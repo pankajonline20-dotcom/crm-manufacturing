@@ -268,6 +268,35 @@ export default function LeadDetail() {
               </div>
             </div>
           )}
+
+          {/* Next Follow-up Date quick-edit */}
+          {!isNew && !editing && (
+            <div className="card-flat" style={{ padding: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Next Follow-up</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="date"
+                  value={lead.next_followup_date || ''}
+                  onChange={async (e) => {
+                    try {
+                      await api.put(`/leads/${id}`, { next_followup_date: e.target.value });
+                      setLead(l => ({ ...l, next_followup_date: e.target.value }));
+                      toast.success('Follow-up date updated');
+                    } catch {
+                      toast.error('Failed to update');
+                    }
+                  }}
+                  className="input"
+                  style={{ flex: 1, fontSize: 13 }}
+                />
+                {lead.next_followup_date && (
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', alignSelf: 'center', margin: 0 }}>
+                    {formatDate(lead.next_followup_date)}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* RIGHT PANEL */}
