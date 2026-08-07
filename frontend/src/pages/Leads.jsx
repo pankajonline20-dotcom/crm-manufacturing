@@ -8,7 +8,7 @@ import StatusBadge, { STATUSES } from '../components/ui/StatusBadge';
 import { TableSkeleton } from '../components/ui/Skeleton';
 import { useStore } from '../store';
 import toast from 'react-hot-toast';
-import { Search, Plus, Filter, Phone, MapPin, LayoutGrid, List, Columns, X, MessageCircle, FileText, ChevronRight, Star } from 'lucide-react';
+import { Search, Plus, Filter, Phone, MapPin, LayoutGrid, List, Columns, X, MessageCircle, FileText, ChevronRight, Star, Trash2 } from 'lucide-react';
 import { formatDate, formatPhone, SOURCE_LABELS, waLink } from '../utils';
 
 const STATUS_META = {
@@ -88,6 +88,17 @@ export default function Leads() {
     } catch {
       setLeads(prev => prev.map(l => l.id === leadId ? oldLead : l));
       toast.error('VIP update failed');
+    }
+  };
+
+  const deleteLead = async (leadId, leadName) => {
+    if (!confirm(`Delete lead "${leadName}"? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/leads/${leadId}`);
+      setLeads(prev => prev.filter(l => l.id !== leadId));
+      toast.success('Lead deleted');
+    } catch {
+      toast.error('Delete failed');
     }
   };
 
@@ -195,7 +206,7 @@ export default function Leads() {
             <Link to="/leads/new" className="btn-primary">+ Add First Lead</Link>
           </div>
         ) : view === 'table' ? (
-          <TableView leads={leads} onStatusChange={updateStatus} onVIPToggle={toggleVIP} />
+          <TableView leads={leads} onStatusChange={updateStatus} onVIPToggle={toggleVIP} onDelete={deleteLead} />
         ) : (
           <KanbanView grouped={grouped} onDragEnd={onDragEnd} />
         )}
@@ -204,7 +215,7 @@ export default function Leads() {
   );
 }
 
-function TableView({ leads, onStatusChange, onVIPToggle }) {
+function TableView({ leads, onStatusChange, onVIPToggle, onDelete }) {
   const today = new Date().toISOString().split('T')[0];
 
   return (
@@ -269,6 +280,14 @@ function TableView({ leads, onStatusChange, onVIPToggle }) {
               <Link to={`/quotations/new?lead_id=${lead.id}&lead_name=${encodeURIComponent(lead.name)}`} className="btn-ghost" style={{ padding: '5px', borderRadius: 6 }}>
                 <FileText size={14} />
               </Link>
+              <button
+                onClick={() => onDelete?.(lead.id, lead.name)}
+                className="btn-ghost"
+                style={{ padding: '5px', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--status-lost)' }}
+                title="Delete lead"
+              >
+                <Trash2 size={14} />
+              </button>
               <Link to={`/leads/${lead.id}`} className="btn-ghost" style={{ padding: '5px', borderRadius: 6 }}>
                 <ChevronRight size={14} />
               </Link>
