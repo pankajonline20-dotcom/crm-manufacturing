@@ -139,7 +139,7 @@ router.delete('/:id', authMiddleware, (req, res) => {
     db.prepare('DELETE FROM quotations WHERE lead_id = ?').run(req.params.id);
     db.prepare('DELETE FROM payments WHERE lead_id = ?').run(req.params.id);
     db.prepare('DELETE FROM deliveries WHERE lead_id = ?').run(req.params.id);
-    db.prepare('DELETE FROM visits WHERE lead_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM customer_visits WHERE lead_id = ?').run(req.params.id);
 
     // Finally delete the lead
     db.prepare('DELETE FROM leads WHERE id = ?').run(req.params.id);
