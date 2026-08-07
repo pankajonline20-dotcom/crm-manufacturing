@@ -1,5 +1,6 @@
 [build]
-builder = "dockerfile"
+builder = "nixpacks"
 
 [deploy]
 startCommand = "npm start"
+volumes = ["data:/app/data"]
