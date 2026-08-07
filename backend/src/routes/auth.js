@@ -68,9 +68,10 @@ router.post('/users', authMiddleware, (req, res) => {
     const hashedPassword = bcrypt.hashSync(password, 10);
     const result = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)').run(name, email, hashedPassword, role);
     const newUser = db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?').get(result.lastInsertRowid);
-    res.status(201).json({ success: true, user: newUser });
+    res.status(201).json({ success: true, user: newUser, message: 'User created successfully' });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create user' });
+    console.error('User creation error:', err);
+    res.status(500).json({ error: 'Failed to create user', details: err.message });
   }
 });
 
