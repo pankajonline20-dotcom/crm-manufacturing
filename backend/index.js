@@ -69,41 +69,24 @@ app.use('/api', boardroomRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// API 404 handler — catch unknown /api/* routes
-app.use('/api', (req, res) => {
-  res.status(404).json({ error: 'API route not found', path: req.path });
+// API 404 handler — MUST come before static files
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API route not found', method: req.method, path: req.path });
 });
 
-// Serve React frontend static files — NO CACHE for APIs
+// Serve React frontend static files
 const distPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(distPath));
 
-// Catch-all: serve index.html for React Router — ONLY for non-API requests
+// Catch-all for React Router — serves index.html for all non-API routes
 app.use((req, res) => {
-  // Never serve index.html for API requests
-  if (req.path.startsWith('/api')) {
-    return res.status(404).json({ error: 'Not found' });
-  }
-
   const indexPath = path.join(distPath, 'index.html');
   const fs = require('fs');
-
-  try {
-    if (fs.existsSync(indexPath)) {
-      return res.sendFile(indexPath);
-    }
-  } catch (err) {
-    console.error('Error serving index.html:', err);
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(200).send('<!DOCTYPE html><html><body>Frontend not found</body></html>');
   }
-
-  // Fallback if index.html not found
-  res.status(200).send(`
-    <!DOCTYPE html>
-    <html>
-      <head><title>CRM</title></head>
-      <body><p>Frontend build not found. Run: npm run build</p></body>
-    </html>
-  `);
 });
 
 // Error handler
