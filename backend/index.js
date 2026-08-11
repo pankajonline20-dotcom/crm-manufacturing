@@ -62,7 +62,7 @@ app.use('/api', boardroomRoutes);
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
 // API 404 handler — unknown API routes
-app.use('/api/*', (req, res) => {
+app.use('/api', (req, res) => {
   console.log(`[404] API not found: ${req.method} ${req.path}`);
   res.status(404).json({
     error: 'API route not found',
