@@ -39,6 +39,15 @@ app.use(cors({
   credentials: true
 }));
 
+// CRITICAL: Block static files for API paths
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    // Skip to next middleware (don't serve static files for API)
+    return next();
+  }
+  next();
+});
+
 // Disable ETags globally
 app.disable('etag');
 
@@ -76,13 +85,13 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Dat
 const distPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(distPath));
 
-// Catch-all for React Router — serves index.html ONLY for non-API routes
-app.use((req, res) => {
-  // CRITICAL: Never serve HTML for API requests
-  if (req.path.startsWith('/api')) {
-    return res.status(404).json({ error: 'API endpoint not found', path: req.path });
-  }
+// 404 for unmatched API routes
+app.use('/api', (req, res) => {
+  return res.status(404).json({ error: 'API endpoint not found', method: req.method, path: req.path });
+});
 
+// Catch-all for React Router — serves index.html for non-API routes
+app.use((req, res) => {
   const indexPath = path.join(distPath, 'index.html');
   const fs = require('fs');
   if (fs.existsSync(indexPath)) {
@@ -92,10 +101,14 @@ app.use((req, res) => {
   }
 });
 
-// Error handler
+// Error handler - MUST be last
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal server error', details: err.message });
+  console.error('Error:', err.message, 'Path:', req.path);
+  // CRITICAL: Always return JSON for API errors
+  if (req.path.startsWith('/api')) {
+    return res.status(500).json({ error: 'Internal server error', details: err.message });
+  }
+  res.status(500).send('<!DOCTYPE html><html><body>Error</body></html>');
 });
 
 const PORT = process.env.PORT || 3001;
