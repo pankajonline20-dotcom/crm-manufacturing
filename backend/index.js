@@ -72,20 +72,17 @@ app.use('/api', boardroomRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// API 404 handler — MUST come before static files
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api')) {
-    return res.status(404).json({ error: 'API route not found', method: req.method, path: req.path });
-  }
-  next();
-});
-
 // Serve React frontend static files
 const distPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(distPath));
 
-// Catch-all for React Router — serves index.html for all non-API routes
+// Catch-all for React Router — serves index.html ONLY for non-API routes
 app.use((req, res) => {
+  // CRITICAL: Never serve HTML for API requests
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'API endpoint not found', path: req.path });
+  }
+
   const indexPath = path.join(distPath, 'index.html');
   const fs = require('fs');
   if (fs.existsSync(indexPath)) {
