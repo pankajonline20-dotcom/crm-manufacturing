@@ -70,8 +70,11 @@ app.use('/api', boardroomRoutes);
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
 // API 404 handler — MUST come before static files
-app.all('/api/*', (req, res) => {
-  res.status(404).json({ error: 'API route not found', method: req.method, path: req.path });
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'API route not found', method: req.method, path: req.path });
+  }
+  next();
 });
 
 // Serve React frontend static files
