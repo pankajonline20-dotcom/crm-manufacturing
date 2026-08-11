@@ -42,6 +42,14 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Disable caching on API responses
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', authRoutes);
@@ -66,9 +74,9 @@ app.use('/api', (req, res) => {
   res.status(404).json({ error: 'API route not found', path: req.path });
 });
 
-// Serve React frontend static files
+// Serve React frontend static files — NO CACHE for APIs
 const distPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(distPath, { maxAge: '1h' }));
+app.use(express.static(distPath));
 
 // Catch-all: serve index.html for React Router — ONLY for non-API requests
 app.use((req, res) => {
