@@ -76,7 +76,7 @@ const distPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(distPath));
 
 // Catch-all: serve index.html for React Router
-app.get('*', (req, res) => {
+app.use((req, res) => {
   const indexPath = path.join(distPath, 'index.html');
   const fs = require('fs');
 
