@@ -61,49 +61,44 @@ app.use('/api', boardroomRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// API 404 handler — unknown API routes
+// API 404 handler — catch unknown /api/* routes
 app.use('/api', (req, res) => {
-  console.log(`[404] API not found: ${req.method} ${req.path}`);
-  res.status(404).json({
-    error: 'API route not found',
-    method: req.method,
-    path: req.path,
-  });
+  res.status(404).json({ error: 'API route not found', path: req.path });
 });
 
-// Serve React frontend (production)
+// Serve React frontend static files
 const distPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(distPath));
+app.use(express.static(distPath, { maxAge: '1h' }));
 
-// Catch-all: serve index.html for React Router
+// Catch-all: serve index.html for React Router — ONLY for non-API requests
 app.use((req, res) => {
+  // Never serve index.html for API requests
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
   const indexPath = path.join(distPath, 'index.html');
   const fs = require('fs');
 
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(200).send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>CRM</title>
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; }
-            h2 { color: #E8500A; }
-            p { color: #6B7280; }
-          </style>
-        </head>
-        <body>
-          <h2>Frontend build not found</h2>
-          <p>Run: <code>npm run build</code> in frontend folder</p>
-          <p>API is working! Try <a href="/api/health">/api/health</a></p>
-        </body>
-      </html>
-    `);
+  try {
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+  } catch (err) {
+    console.error('Error serving index.html:', err);
   }
+
+  // Fallback if index.html not found
+  res.status(200).send(`
+    <!DOCTYPE html>
+    <html>
+      <head><title>CRM</title></head>
+      <body><p>Frontend build not found. Run: npm run build</p></body>
+    </html>
+  `);
 });
 
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Internal server error', details: err.message });
