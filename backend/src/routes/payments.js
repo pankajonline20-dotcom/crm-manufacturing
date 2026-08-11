@@ -1,24 +1,42 @@
 const express = require('express');
 const { db } = require('../database');
 const { authMiddleware } = require('../middleware/auth');
+const { logAction } = require('../utils/audit');
 
 const router = express.Router();
 router.use(authMiddleware);
 
 router.get('/', (req, res) => {
-  const payments = db.prepare(`
+  let query = `
     SELECT p.*, l.name as lead_name, l.phone as lead_phone, q.quote_number, q.total_amount as quote_total
     FROM payments p
     LEFT JOIN leads l ON p.lead_id = l.id
     LEFT JOIN quotations q ON p.quotation_id = q.id
-    ORDER BY p.id DESC
-  `).all();
+    WHERE l.is_deleted = 0 OR l.id IS NULL
+  `;
+  const params = [];
+
+  if (req.user.role === 'agent') {
+    query += ' AND l.assigned_to = ?';
+    params.push(req.user.id);
+  }
+
+  query += ' ORDER BY p.id DESC';
+  const payments = db.prepare(query).all(...params);
   res.json(payments);
 });
 
 router.put('/:id', (req, res) => {
-  const payment = db.prepare('SELECT * FROM payments WHERE id = ?').get(req.params.id);
+  const payment = db.prepare(`
+    SELECT p.*, l.assigned_to FROM payments p
+    LEFT JOIN leads l ON p.lead_id = l.id
+    WHERE p.id = ?
+  `).get(req.params.id);
   if (!payment) return res.status(404).json({ error: 'Payment not found' });
+
+  if (req.user.role === 'agent' && payment.assigned_to !== req.user.id) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
 
   const { amount, payment_date, mode, status, notes } = req.body;
   db.prepare(`
@@ -27,6 +45,7 @@ router.put('/:id', (req, res) => {
     status ?? payment.status, notes ?? payment.notes, req.params.id);
 
   const updated = db.prepare('SELECT * FROM payments WHERE id = ?').get(req.params.id);
+  logAction(req.user.id, 'UPDATE', 'payments', req.params.id, payment, updated);
   res.json(updated);
 });
 
@@ -56,13 +75,14 @@ router.delete('/:id', (req, res) => {
       return res.status(403).json({ error: 'Admin only' });
     }
 
-    const payment = db.prepare('SELECT id FROM payments WHERE id = ?').get(req.params.id);
+    const payment = db.prepare('SELECT * FROM payments WHERE id = ?').get(req.params.id);
     if (!payment) {
       console.log('Payment not found:', req.params.id);
       return res.status(404).json({ error: 'Payment not found' });
     }
 
     const result = db.prepare('DELETE FROM payments WHERE id = ?').run(req.params.id);
+    logAction(req.user.id, 'DELETE', 'payments', req.params.id, payment, null);
     console.log('Payment deleted:', { id: req.params.id, changes: result.changes });
     res.json({ message: 'Payment deleted', changes: result.changes });
   } catch (err) {

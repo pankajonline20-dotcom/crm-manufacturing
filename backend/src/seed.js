@@ -3,23 +3,42 @@ const { db } = require('./database');
 
 function seedDatabase() {
   try {
+    // Count ALL users (deleted or not)
     const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+
+    // If ANY user exists — do absolutely nothing
     if (userCount > 0) {
-      console.log('Database already seeded. Skipping user creation.');
+      console.log(`[Seed] ${userCount} users exist — skipping seed. No data touched. Data is SAFE.`);
       return;
     }
 
-    // Users - only seed if no users exist
+    // Only runs on brand new empty database
+    console.log('[Seed] Empty database — creating first admin only...');
+
     const adminHash = bcrypt.hashSync('admin123', 10);
-    const agentHash = bcrypt.hashSync('agent123', 10);
+    db.prepare(`
+      INSERT INTO users (name, email, password_hash, role, is_active, is_deleted)
+      VALUES (?, ?, ?, ?, 1, 0)
+    `).run('Admin', 'admin@salessaathi.com', adminHash, 'admin');
 
-    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Pankaj Mehta', 'admin@salessaathi.com', adminHash, 'admin');
-    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Rahul Shah', 'rahul@salessaathi.com', agentHash, 'agent');
-    db.prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`).run('Priya Patel', 'priya@salessaathi.com', agentHash, 'agent');
+    console.log('[Seed] ✅ First admin created.');
+    console.log('[Seed] 📧 Email: admin@salessaathi.com');
+    console.log('[Seed] 🔑 Password: admin123');
+    console.log('[Seed] ⚠️  CHANGE PASSWORD IMMEDIATELY after first login.');
 
-    console.log('Users created. Skipping demo leads/quotations/payments.');
+    // Settings
+    db.prepare(`
+      INSERT OR IGNORE INTO settings (id, business_name)
+      VALUES (1, 'SalesSaathi')
+    `).run();
+
+    console.log('[Seed] Done. No agents were touched. Data is PERMANENT.');
+
+    // Skip demo data — seed only admin, nothing else
+    console.log('[Seed] Fresh install complete. Add agents via /api/auth/users');
     return;
 
+    // ── Demo data below (skipped for fresh install) ──
     // Machines
     const machines = [
       {

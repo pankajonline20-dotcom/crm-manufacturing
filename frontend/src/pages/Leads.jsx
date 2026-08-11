@@ -221,8 +221,8 @@ function TableView({ leads, onStatusChange, onVIPToggle, onDelete }) {
   return (
     <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
       {/* Table header */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto', gap: 0, padding: '10px 16px', borderBottom: '2px solid var(--border)', background: 'var(--bg-app)' }}>
-        {['Contact', 'Phone', 'Requirement', 'Status', 'Follow-up', 'Actions'].map(h => (
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 0.9fr 0.8fr 0.8fr 0.7fr 0.7fr auto', gap: 0, padding: '10px 16px', borderBottom: '2px solid var(--border)', background: 'var(--bg-app)', overflowX: 'auto' }}>
+        {['Contact', 'Created By', 'Phone', 'Requirement', 'Status', 'Follow-up', 'Actions'].map(h => (
           <div key={h} style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</div>
         ))}
       </div>
@@ -233,28 +233,35 @@ function TableView({ leads, onStatusChange, onVIPToggle, onDelete }) {
 
         return (
           <motion.div key={lead.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-            style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto', gap: 0, padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', alignItems: 'center', cursor: 'pointer', transition: 'background 100ms' }}
+            style={{ display: 'grid', gridTemplateColumns: '2fr 0.9fr 0.8fr 0.8fr 0.7fr 0.7fr auto', gap: 0, padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', alignItems: 'center', cursor: 'pointer', transition: 'background 100ms' }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-app)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
 
             <Link to={`/leads/${lead.id}`} style={{ textDecoration: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--brand-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{lead.name[0]}</div>
+                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--brand-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{lead?.name?.[0] || '?'}</div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{lead.name}</div>
-                  {lead.city && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{lead.city}</div>}
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{lead?.name || '—'}</div>
+                  {lead?.city && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{lead.city}</div>}
                 </div>
               </div>
             </Link>
 
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{formatPhone(lead.phone)}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-secondary)', overflow: 'hidden' }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--brand-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>
+                {(lead?.created_by_name || 'U')?.[0] || 'U'}
+              </div>
+              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead?.created_by_name || 'Unknown'}</span>
+            </div>
+
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{formatPhone(lead?.phone)}</div>
 
             <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
-              {lead.requirement || '—'}
+              {lead?.requirement || '—'}
             </div>
 
             <div>
-              <select value={lead.status} onChange={e => onStatusChange(lead.id, e.target.value)} onClick={e => e.stopPropagation()}
+              <select value={lead?.status || 'new'} onChange={e => onStatusChange(lead.id, e.target.value)} onClick={e => e.stopPropagation()}
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 12, color: 'transparent', width: 0, height: 0, position: 'absolute' }} />
               <div onClick={e => { e.preventDefault(); const sel = e.currentTarget.nextSibling; sel && sel.focus(); }}>
                 <StatusBadge status={lead.status} size="sm" />
@@ -262,33 +269,33 @@ function TableView({ leads, onStatusChange, onVIPToggle, onDelete }) {
             </div>
 
             <div style={{ fontSize: 12, fontWeight: 600, color: isOverdue ? 'var(--status-lost)' : isToday ? 'var(--status-interested)' : 'var(--text-muted)' }}>
-              {isOverdue ? '⚠ Overdue' : isToday ? '📅 Today' : formatDate(lead.next_followup_date) || '—'}
+              {isOverdue ? '⚠ Overdue' : isToday ? '📅 Today' : formatDate(lead?.next_followup_date) || '—'}
             </div>
 
             <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
               <button
-                onClick={() => onVIPToggle?.(lead.id, lead.is_vip)}
+                onClick={() => onVIPToggle?.(lead?.id, lead?.is_vip)}
                 className="btn-ghost"
                 style={{ padding: '5px', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                 title={lead.is_vip ? 'Remove VIP' : 'Mark as VIP'}
               >
                 <Star size={14} fill={lead.is_vip ? '#FFB800' : 'none'} color={lead.is_vip ? '#FFB800' : '#D1D5DB'} />
               </button>
-              <a href={waLink(lead.phone)} target="_blank" rel="noreferrer" className="btn-ghost" style={{ padding: '5px', borderRadius: 6 }}>
+              <a href={waLink(lead?.phone)} target="_blank" rel="noreferrer" className="btn-ghost" style={{ padding: '5px', borderRadius: 6 }}>
                 <MessageCircle size={14} style={{ color: '#25D366' }} />
               </a>
-              <Link to={`/quotations/new?lead_id=${lead.id}&lead_name=${encodeURIComponent(lead.name)}`} className="btn-ghost" style={{ padding: '5px', borderRadius: 6 }}>
+              <Link to={`/quotations/new?lead_id=${lead?.id}&lead_name=${encodeURIComponent(lead?.name || '')}`} className="btn-ghost" style={{ padding: '5px', borderRadius: 6 }}>
                 <FileText size={14} />
               </Link>
               <button
-                onClick={() => onDelete?.(lead.id, lead.name)}
+                onClick={() => onDelete?.(lead?.id, lead?.name)}
                 className="btn-ghost"
                 style={{ padding: '5px', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--status-lost)' }}
                 title="Delete lead"
               >
                 <Trash2 size={14} />
               </button>
-              <Link to={`/leads/${lead.id}`} className="btn-ghost" style={{ padding: '5px', borderRadius: 6 }}>
+              <Link to={`/leads/${lead?.id}`} className="btn-ghost" style={{ padding: '5px', borderRadius: 6 }}>
                 <ChevronRight size={14} />
               </Link>
             </div>
@@ -329,14 +336,14 @@ function KanbanView({ grouped, onDragEnd }) {
                               boxShadow: snapshot.isDragging ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
                               transform: snapshot.isDragging ? `${provided.draggableProps.style?.transform} rotate(2deg) scale(1.02)` : provided.draggableProps.style?.transform,
                               opacity: snapshot.isDragging ? 0.95 : 1, transition: snapshot.isDragging ? undefined : 'box-shadow 150ms, opacity 150ms' }}>
-                            <Link to={`/leads/${lead.id}`} style={{ textDecoration: 'none' }}>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.name}</div>
-                              {lead.city && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 3 }}><MapPin size={10} />{lead.city}</div>}
-                              {lead.requirement && <div style={{ fontSize: 11, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 8 }}>{lead.requirement}</div>}
+                            <Link to={`/leads/${lead?.id}`} style={{ textDecoration: 'none' }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead?.name || '—'}</div>
+                              {lead?.city && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 3 }}><MapPin size={10} />{lead.city}</div>}
+                              {lead?.requirement && <div style={{ fontSize: 11, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 8 }}>{lead.requirement}</div>}
                             </Link>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>{formatPhone(lead.phone)}</span>
-                              <a href={waLink(lead.phone)} target="_blank" rel="noreferrer" style={{ color: '#25D366', display: 'flex' }} onClick={e => e.stopPropagation()}>
+                              <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>{formatPhone(lead?.phone)}</span>
+                              <a href={waLink(lead?.phone)} target="_blank" rel="noreferrer" style={{ color: '#25D366', display: 'flex' }} onClick={e => e.stopPropagation()}>
                                 <MessageCircle size={13} />
                               </a>
                             </div>

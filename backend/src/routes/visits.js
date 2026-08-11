@@ -13,16 +13,17 @@ router.get('/', (req, res) => {
     FROM customer_visits cv
     LEFT JOIN leads l ON cv.lead_id = l.id
     LEFT JOIN users u ON cv.assigned_to = u.id
+    WHERE cv.is_deleted = 0
   `;
   const params = [];
 
   if (date) {
-    query += ` WHERE cv.visit_date = ?`;
+    query += ` AND cv.visit_date = ?`;
     params.push(date);
   }
 
   if (upcoming) {
-    query += ` WHERE cv.visit_date >= date('now')`;
+    query += ` AND cv.visit_date >= date('now')`;
   }
 
   query += ' ORDER BY cv.visit_date ASC, cv.visit_time ASC';
@@ -39,6 +40,7 @@ router.get('/tomorrow', (req, res) => {
     LEFT JOIN users u ON cv.assigned_to = u.id
     WHERE cv.visit_date = date('now', '+1 day')
       AND cv.status = 'scheduled'
+      AND cv.is_deleted = 0
     ORDER BY cv.visit_time ASC
   `).all();
   res.json(visits);
@@ -53,6 +55,7 @@ router.get('/today', (req, res) => {
     LEFT JOIN users u ON cv.assigned_to = u.id
     WHERE cv.visit_date = date('now')
       AND cv.status IN ('scheduled', 'arrived')
+      AND cv.is_deleted = 0
     ORDER BY cv.visit_time ASC
   `).all();
   res.json(visits);

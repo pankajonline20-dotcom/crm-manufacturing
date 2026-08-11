@@ -7,7 +7,7 @@ router.use(authMiddleware);
 
 router.get('/', (req, res) => {
   const { type, city, q } = req.query;
-  let query = 'SELECT * FROM directory_contacts WHERE is_active = 1';
+  let query = 'SELECT * FROM directory_contacts WHERE is_active = 1 AND is_deleted = 0';
   const params = [];
 
   if (type) {

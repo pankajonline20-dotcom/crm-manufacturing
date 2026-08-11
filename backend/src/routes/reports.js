@@ -67,4 +67,26 @@ router.get('/pipeline', (req, res) => {
   res.json({ pipeline, monthly_leads: monthlyLeads });
 });
 
+// Leads by agent (who created them)
+router.get('/leads-by-agent', (req, res) => {
+  const thisMonth = new Date().toISOString().slice(0, 7);
+
+  const data = db.prepare(`
+    SELECT
+      u.id   AS agent_id,
+      u.name AS agent_name,
+      COUNT(l.id) AS total_leads,
+      SUM(CASE WHEN strftime('%Y-%m', l.created_at) = ? THEN 1 ELSE 0 END) AS this_month,
+      SUM(CASE WHEN l.status = 'won' THEN 1 ELSE 0 END) AS won,
+      SUM(CASE WHEN l.status IN ('interested', 'quoted', 'negotiating') THEN 1 ELSE 0 END) AS pipeline
+    FROM users u
+    LEFT JOIN leads l ON l.created_by = u.id AND l.is_deleted = 0
+    WHERE u.is_deleted = 0
+    GROUP BY u.id, u.name
+    ORDER BY total_leads DESC
+  `).all(thisMonth);
+
+  res.json(data);
+});
+
 module.exports = router;

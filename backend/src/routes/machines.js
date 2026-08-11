@@ -24,8 +24,9 @@ router.get('/', (req, res) => {
     COUNT(CASE WHEN mm.media_type = 'video' THEN 1 END) as videoCount,
     MIN(CASE WHEN mm.media_type = 'image' THEN mm.file_url END) as firstImage
   FROM machines m
-  LEFT JOIN machine_media mm ON mm.machine_id = m.id`;
-  if (active_only === 'true') query += ' WHERE m.is_active = 1';
+  LEFT JOIN machine_media mm ON mm.machine_id = m.id
+  WHERE m.is_deleted = 0`;
+  if (active_only === 'true') query += ' AND m.is_active = 1';
   query += ' GROUP BY m.id ORDER BY m.model_name ASC';
   const machines = db.prepare(query).all();
   res.json(machines);
@@ -39,7 +40,7 @@ router.get('/:id/full', (req, res) => {
       COUNT(CASE WHEN mm.media_type = 'video' THEN 1 END) as videoCount
     FROM machines m
     LEFT JOIN machine_media mm ON mm.machine_id = m.id
-    WHERE m.id = ?
+    WHERE m.id = ? AND m.is_deleted = 0
     GROUP BY m.id
   `).get(req.params.id);
   if (!machine) return res.status(404).json({ error: 'Machine not found' });

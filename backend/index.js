@@ -6,6 +6,7 @@ const { initializeDatabase } = require('./src/database');
 const { seedDatabase } = require('./src/seed');
 const { runMigrations } = require('./src/migrate');
 const { startNightlyJobs } = require('./src/utils/nightlyJobs');
+const { scheduleDailyBackup, backupDB } = require('./src/utils/backup');
 
 const authRoutes = require('./src/routes/auth');
 const leadsRoutes = require('./src/routes/leads');
@@ -71,6 +72,11 @@ try {
   initializeDatabase();
   runMigrations();
   seedDatabase();
+
+  // Initialize backup system
+  backupDB();
+  scheduleDailyBackup();
+
   app.listen(PORT, () => {
     console.log(`CRM Backend running on http://localhost:${PORT}`);
     startNightlyJobs();

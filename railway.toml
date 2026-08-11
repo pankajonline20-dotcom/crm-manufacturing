@@ -1,3 +1,7 @@
 [deploy]
 startCommand = "npm start"
-volumes = ["data:/app/data"]
+volumes = ["data:/var/data"]
+
+[env]
+DATABASE_PATH = "/var/data/crm.db"
+BACKUP_PATH = "/var/data/backups"

@@ -2,7 +2,7 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const dbPath = process.env.DATABASE_URL || './data/crm.db';
+const dbPath = process.env.DATABASE_PATH || process.env.DATABASE_URL || './data/crm.db';
 const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
@@ -69,6 +69,9 @@ function initializeDatabase() {
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         role TEXT DEFAULT 'agent',
+        is_active INTEGER DEFAULT 1,
+        is_deleted INTEGER DEFAULT 0,
+        deleted_at datetime,
         created_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -82,6 +85,8 @@ function initializeDatabase() {
         requirement TEXT,
         status TEXT DEFAULT 'new',
         assigned_to INTEGER REFERENCES users(id),
+        created_by INTEGER REFERENCES users(id),
+        created_by_name TEXT,
         next_followup_date DATE,
         last_called_at datetime,
         score INTEGER DEFAULT 0,
@@ -95,6 +100,8 @@ function initializeDatabase() {
         vip_note TEXT,
         vip_marked_at datetime,
         vip_marked_by INTEGER REFERENCES users(id),
+        is_deleted INTEGER DEFAULT 0,
+        deleted_at datetime,
         created_at datetime DEFAULT CURRENT_TIMESTAMP,
         updated_at datetime DEFAULT CURRENT_TIMESTAMP
       );
@@ -117,7 +124,8 @@ function initializeDatabase() {
         description TEXT,
         specifications TEXT,
         faqs TEXT,
-        is_active INTEGER DEFAULT 1
+        is_active INTEGER DEFAULT 1,
+        is_deleted INTEGER DEFAULT 0
       );
 
       CREATE TABLE IF NOT EXISTS machine_media (
@@ -299,6 +307,7 @@ function initializeDatabase() {
         visit_notes TEXT,
         outcome_notes TEXT,
         reminder_sent INTEGER DEFAULT 0,
+        is_deleted INTEGER DEFAULT 0,
         created_by INTEGER REFERENCES users(id),
         created_at datetime DEFAULT CURRENT_TIMESTAMP
       );
@@ -324,6 +333,7 @@ function initializeDatabase() {
         supplier_lead_time TEXT,
         notes TEXT,
         is_active INTEGER DEFAULT 1,
+        is_deleted INTEGER DEFAULT 0,
         created_by INTEGER REFERENCES users(id),
         created_at datetime DEFAULT CURRENT_TIMESTAMP,
         updated_at datetime DEFAULT CURRENT_TIMESTAMP
@@ -336,6 +346,17 @@ function initializeDatabase() {
         email TEXT,
         address TEXT,
         updated_at datetime DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER REFERENCES users(id),
+        action TEXT NOT NULL,
+        table_name TEXT NOT NULL,
+        record_id INTEGER,
+        old_value TEXT,
+        new_value TEXT,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE INDEX IF NOT EXISTS idx_directory_type ON directory_contacts(contact_type);
@@ -409,6 +430,11 @@ function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_activity_log_user ON activity_log(user_id);
       CREATE INDEX IF NOT EXISTS idx_activity_log_created ON activity_log(created_at);
       CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON alerts(is_resolved);
+      CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log(user_id);
+      CREATE INDEX IF NOT EXISTS idx_audit_log_table ON audit_log(table_name);
+      CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at);
+      CREATE INDEX IF NOT EXISTS idx_leads_created_by ON leads(created_by);
+      CREATE INDEX IF NOT EXISTS idx_leads_assigned_to ON leads(assigned_to);
 
       CREATE TABLE IF NOT EXISTS daily_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

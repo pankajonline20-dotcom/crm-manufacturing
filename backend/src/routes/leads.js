@@ -1,6 +1,8 @@
 const express = require('express');
 const { db } = require('../database');
 const { authMiddleware } = require('../middleware/auth');
+const { deleteLead, restoreLead } = require('../utils/softDelete');
+const { logAction } = require('../utils/audit');
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -9,10 +11,15 @@ router.get('/', (req, res) => {
   const { status, assigned_to, source, city, search, sort_by = 'created_at', order = 'DESC' } = req.query;
 
   let query = `
-    SELECT l.*, u.name as assigned_name
+    SELECT l.*,
+      COALESCE(creator.name, l.created_by_name, 'Unknown') as created_by_name,
+      COALESCE(assignee.name, 'Former Agent') as assigned_name,
+      assignee.is_active as agent_is_active,
+      assignee.is_deleted as agent_is_deleted
     FROM leads l
-    LEFT JOIN users u ON l.assigned_to = u.id
-    WHERE 1=1
+    LEFT JOIN users creator ON l.created_by = creator.id
+    LEFT JOIN users assignee ON l.assigned_to = assignee.id
+    WHERE l.is_deleted = 0
   `;
   const params = [];
 
@@ -45,7 +52,7 @@ router.get('/today-followups', (req, res) => {
     SELECT l.*, u.name as assigned_name
     FROM leads l
     LEFT JOIN users u ON l.assigned_to = u.id
-    WHERE l.next_followup_date = ?
+    WHERE l.next_followup_date = ? AND l.is_deleted = 0
   `;
   const params = [today];
 
@@ -60,11 +67,11 @@ router.get('/today-followups', (req, res) => {
 });
 
 router.get('/pipeline-summary', (req, res) => {
-  let query = `SELECT status, COUNT(*) as count FROM leads`;
+  let query = `SELECT status, COUNT(*) as count FROM leads WHERE is_deleted = 0`;
   const params = [];
 
   if (req.user.role === 'agent') {
-    query += ' WHERE assigned_to = ?';
+    query += ' AND assigned_to = ?';
     params.push(req.user.id);
   }
 
@@ -75,10 +82,16 @@ router.get('/pipeline-summary', (req, res) => {
 
 router.get('/:id', (req, res) => {
   const lead = db.prepare(`
-    SELECT l.*, u.name as assigned_name
+    SELECT l.*,
+      COALESCE(creator.name, l.created_by_name, 'Unknown') as created_by_name,
+      creator.email as created_by_email,
+      COALESCE(assignee.name, 'Former Agent') as assigned_name,
+      assignee.is_active as agent_is_active,
+      assignee.is_deleted as agent_is_deleted
     FROM leads l
-    LEFT JOIN users u ON l.assigned_to = u.id
-    WHERE l.id = ?
+    LEFT JOIN users creator ON l.created_by = creator.id
+    LEFT JOIN users assignee ON l.assigned_to = assignee.id
+    WHERE l.id = ? AND l.is_deleted = 0
   `).get(req.params.id);
 
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
@@ -96,17 +109,22 @@ router.post('/', (req, res) => {
     const { name, phone, email, city, source, requirement, status, assigned_to, next_followup_date } = req.body;
     if (!name || !phone) return res.status(400).json({ error: 'Name and phone required' });
 
-    console.log('Inserting lead:', { name, phone, email, city, source, status, assigned_to: assigned_to || req.user.id });
+    // Lead created by whoever is logged in
+    const createdBy = req.user.id;
+    const createdByName = req.user.name;
+
+    console.log('Inserting lead:', { name, phone, email, city, source, status, created_by: createdBy, created_by_name: createdByName });
     const result = db.prepare(`
-      INSERT INTO leads (name, phone, email, city, source, requirement, status, assigned_to, next_followup_date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO leads (name, phone, email, city, source, requirement, status, assigned_to, next_followup_date, created_by, created_by_name)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(name, phone, email || null, city || null, source || 'manual', requirement || null,
-      status || 'new', assigned_to || req.user.id, next_followup_date || null);
+      status || 'new', assigned_to || req.user.id, next_followup_date || null, createdBy, createdByName);
 
     console.log('Lead inserted with ID:', result.lastInsertRowid);
     const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(result.lastInsertRowid);
     if (!lead) return res.status(500).json({ error: 'Lead created but not found', id: result.lastInsertRowid });
 
+    logAction(req.user.id, 'CREATE', 'leads', lead.id, null, lead);
     console.log('Lead created successfully:', lead.id);
     res.status(201).json(lead);
   } catch (err) {
@@ -117,7 +135,7 @@ router.post('/', (req, res) => {
 
 router.put('/:id', (req, res) => {
   const { name, phone, email, city, source, requirement, status, assigned_to, next_followup_date } = req.body;
-  const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+  const lead = db.prepare('SELECT * FROM leads WHERE id = ? AND is_deleted = 0').get(req.params.id);
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
   if (req.user.role === 'agent' && lead.assigned_to !== req.user.id) {
@@ -137,34 +155,18 @@ router.put('/:id', (req, res) => {
   );
 
   const updated = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+  logAction(req.user.id, 'UPDATE', 'leads', lead.id, lead, updated);
   res.json(updated);
 });
 
-router.delete('/:id', authMiddleware, (req, res) => {
+router.delete('/:id', (req, res) => {
   try {
-    const lead = db.prepare('SELECT id FROM leads WHERE id = ?').get(req.params.id);
+    const lead = db.prepare('SELECT * FROM leads WHERE id = ? AND is_deleted = 0').get(req.params.id);
     if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
-    // Disable foreign key constraints temporarily
-    db.prepare('PRAGMA foreign_keys = OFF').run();
-
-    try {
-      // Delete related records in order of dependency
-      db.prepare('DELETE FROM call_logs WHERE lead_id = ?').run(req.params.id);
-      db.prepare('DELETE FROM quotations WHERE lead_id = ?').run(req.params.id);
-      db.prepare('DELETE FROM payments WHERE lead_id = ?').run(req.params.id);
-      db.prepare('DELETE FROM deliveries WHERE lead_id = ?').run(req.params.id);
-      db.prepare('DELETE FROM customer_visits WHERE lead_id = ?').run(req.params.id);
-      db.prepare('DELETE FROM broadcast_logs WHERE lead_id = ?').run(req.params.id);
-      db.prepare('DELETE FROM customer_health WHERE lead_id = ?').run(req.params.id);
-
-      // Finally delete the lead
-      db.prepare('DELETE FROM leads WHERE id = ?').run(req.params.id);
-      res.json({ message: 'Lead deleted' });
-    } finally {
-      // Re-enable foreign key constraints
-      db.prepare('PRAGMA foreign_keys = ON').run();
-    }
+    deleteLead(req.params.id);
+    logAction(req.user.id, 'DELETE', 'leads', req.params.id, lead, null);
+    res.json({ message: 'Lead deleted' });
   } catch (err) {
     console.error('Delete lead error:', err);
     res.status(500).json({ error: 'Delete failed', details: err.message });
@@ -205,7 +207,7 @@ router.get('/vip', (req, res) => {
     SELECT l.*, u.name as vip_marked_by_name
     FROM leads l
     LEFT JOIN users u ON l.vip_marked_by = u.id
-    WHERE l.is_vip = 1
+    WHERE l.is_vip = 1 AND l.is_deleted = 0
     ORDER BY l.vip_marked_at DESC
   `).all();
   res.json(vips);
@@ -215,7 +217,7 @@ router.put('/:id/vip', (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
 
   const { is_vip, vip_note } = req.body;
-  const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+  const lead = db.prepare('SELECT * FROM leads WHERE id = ? AND is_deleted = 0').get(req.params.id);
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
   db.prepare(`
@@ -229,6 +231,7 @@ router.put('/:id/vip', (req, res) => {
   `).run(is_vip ? 1 : 0, vip_note || '', is_vip ? 1 : 0, is_vip ? 1 : 0, req.user.id, req.params.id);
 
   const updated = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+  logAction(req.user.id, is_vip ? 'VIP_MARK' : 'VIP_UNMARK', 'leads', lead.id, lead, updated);
   res.json(updated);
 });
 
