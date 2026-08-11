@@ -91,17 +91,28 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, phone, email, city, source, requirement, status, assigned_to, next_followup_date } = req.body;
-  if (!name || !phone) return res.status(400).json({ error: 'Name and phone required' });
+  try {
+    console.log('Create lead request:', req.body);
+    const { name, phone, email, city, source, requirement, status, assigned_to, next_followup_date } = req.body;
+    if (!name || !phone) return res.status(400).json({ error: 'Name and phone required' });
 
-  const result = db.prepare(`
-    INSERT INTO leads (name, phone, email, city, source, requirement, status, assigned_to, next_followup_date)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(name, phone, email || null, city || null, source || 'manual', requirement || null,
-    status || 'new', assigned_to || req.user.id, next_followup_date || null);
+    console.log('Inserting lead:', { name, phone, email, city, source, status, assigned_to: assigned_to || req.user.id });
+    const result = db.prepare(`
+      INSERT INTO leads (name, phone, email, city, source, requirement, status, assigned_to, next_followup_date)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(name, phone, email || null, city || null, source || 'manual', requirement || null,
+      status || 'new', assigned_to || req.user.id, next_followup_date || null);
 
-  const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(result.lastInsertRowid);
-  res.status(201).json(lead);
+    console.log('Lead inserted with ID:', result.lastInsertRowid);
+    const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(result.lastInsertRowid);
+    if (!lead) return res.status(500).json({ error: 'Lead created but not found', id: result.lastInsertRowid });
+
+    console.log('Lead created successfully:', lead.id);
+    res.status(201).json(lead);
+  } catch (err) {
+    console.error('Create lead error:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to create lead', details: err.message });
+  }
 });
 
 router.put('/:id', (req, res) => {
