@@ -61,6 +61,49 @@ app.use('/api', boardroomRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
+// API 404 handler — unknown API routes
+app.use('/api/*', (req, res) => {
+  console.log(`[404] API not found: ${req.method} ${req.path}`);
+  res.status(404).json({
+    error: 'API route not found',
+    method: req.method,
+    path: req.path,
+  });
+});
+
+// Serve React frontend (production)
+const distPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(distPath));
+
+// Catch-all: serve index.html for React Router
+app.get('*', (req, res) => {
+  const indexPath = path.join(distPath, 'index.html');
+  const fs = require('fs');
+
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(200).send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>CRM</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; }
+            h2 { color: #E8500A; }
+            p { color: #6B7280; }
+          </style>
+        </head>
+        <body>
+          <h2>Frontend build not found</h2>
+          <p>Run: <code>npm run build</code> in frontend folder</p>
+          <p>API is working! Try <a href="/api/health">/api/health</a></p>
+        </body>
+      </html>
+    `);
+  }
+});
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Internal server error', details: err.message });

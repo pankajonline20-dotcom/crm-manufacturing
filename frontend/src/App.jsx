@@ -38,10 +38,14 @@ import MobileLeadDetail from './pages/mobile/MobileLeadDetail';
 import MobileChat from './pages/mobile/MobileChat';
 import MobileMore from './pages/mobile/MobileMore';
 
+// Error pages
+import NotFound from './pages/NotFound';
+import AccessDenied from './pages/AccessDenied';
+
 function DesktopRoute({ children, adminOnly = false }) {
   const { user, isAdmin } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (adminOnly && !isAdmin) return <Navigate to="/" replace />;
+  if (adminOnly && !isAdmin) return <Layout><AccessDenied /></Layout>;
   return <Layout>{children}</Layout>;
 }
 
@@ -76,7 +80,7 @@ function AppRoutes() {
         <Route path="/payments" element={<MobileRoute><Payments /></MobileRoute>} />
         <Route path="/deliveries" element={<MobileRoute><Deliveries /></MobileRoute>} />
         {isAdmin && <Route path="/reports" element={<MobileRoute><Reports /></MobileRoute>} />}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<MobileRoute><NotFound /></MobileRoute>} />
       </Routes>
     );
   }
@@ -104,7 +108,7 @@ function AppRoutes() {
       <Route path="/health"     element={<DesktopRoute adminOnly><CustomerHealth /></DesktopRoute>} />
       <Route path="/broadcast"  element={<DesktopRoute><Broadcast /></DesktopRoute>} />
       <Route path="/boardroom"  element={<DesktopRoute adminOnly><Boardroom /></DesktopRoute>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<DesktopRoute><NotFound /></DesktopRoute>} />
     </Routes>
   );
 }

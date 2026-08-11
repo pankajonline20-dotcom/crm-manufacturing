@@ -1,0 +1,52 @@
+import { useNavigate } from 'react-router-dom';
+
+export default function NotFound() {
+  const navigate = useNavigate();
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '60vh',
+      padding: '40px 20px',
+      textAlign: 'center',
+    }}>
+      <div style={{ fontSize: 64, marginBottom: 16 }}>🔍</div>
+      <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: '#111827' }}>Page nahi mila</h2>
+      <p style={{ color: '#6B7280', fontSize: 14, marginTop: 8 }}>
+        Yeh page exist nahi karta ya move ho gaya hai.
+      </p>
+      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            padding: '10px 20px',
+            borderRadius: 10,
+            border: '1px solid #E5E7EB',
+            background: '#fff',
+            color: '#374151',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          ← Wapas
+        </button>
+        <button
+          onClick={() => navigate('/dashboard')}
+          style={{
+            padding: '10px 20px',
+            borderRadius: 10,
+            border: 'none',
+            background: '#E8500A',
+            color: '#fff',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          Dashboard
+        </button>
+      </div>
+    </div>
+  );
+}
