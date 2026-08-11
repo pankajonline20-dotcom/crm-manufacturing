@@ -4,6 +4,20 @@ const path = require('path');
 const { db } = require('../database');
 const { authMiddleware, adminOnly } = require('../middleware/auth');
 
+const VALID_CATEGORIES = [
+  'Slider T-shirt',
+  'Opposite T-shirt',
+  'Semi Tray',
+  'Automatic Tray',
+  'Hotfix Machine',
+  'Jarkan Shaking Machine',
+  'Collar Cuff Fusing Machine',
+  'CNC Router',
+  'Rhinestone Brushing Machine',
+  'Manual Heat Press',
+  'Manual Jarkan Shaking Machine',
+];
+
 const router = express.Router();
 router.use(authMiddleware);
 
@@ -85,12 +99,19 @@ router.get('/:id', (req, res) => {
 router.post('/', adminOnly, (req, res) => {
   const { model_name, category, price, gst_percent, description, specifications, faqs } = req.body;
   if (!model_name) return res.status(400).json({ error: 'Model name required' });
+  if (!category) return res.status(400).json({ error: 'Category required' });
+  if (!VALID_CATEGORIES.includes(category)) {
+    return res.status(400).json({
+      error: 'Invalid category',
+      validCategories: VALID_CATEGORIES,
+    });
+  }
 
   const result = db.prepare(`
     INSERT INTO machines (model_name, category, price, gst_percent, description, specifications, faqs)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(
-    model_name, category || null, price || null, gst_percent || 18,
+    model_name, category, price || null, gst_percent || 18,
     description || null,
     typeof specifications === 'object' ? JSON.stringify(specifications) : specifications || null,
     typeof faqs === 'object' ? JSON.stringify(faqs) : faqs || null
@@ -105,6 +126,14 @@ router.put('/:id', adminOnly, (req, res) => {
   if (!machine) return res.status(404).json({ error: 'Machine not found' });
 
   const { model_name, category, price, gst_percent, description, specifications, faqs, is_active } = req.body;
+
+  // Validate category if provided
+  if (category && !VALID_CATEGORIES.includes(category)) {
+    return res.status(400).json({
+      error: 'Invalid category',
+      validCategories: VALID_CATEGORIES,
+    });
+  }
 
   db.prepare(`
     UPDATE machines SET

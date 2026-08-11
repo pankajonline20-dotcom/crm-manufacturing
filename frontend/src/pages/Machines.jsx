@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Plus, Edit2, Package, Upload, Loader2, ChevronDown, ChevronUp, Image, Video, X, Trash2 } from 'lucide-react';
 import { formatINR } from '../utils';
+import MACHINE_CATEGORIES from '../constants/machineCategories';
 import CatalogueWAModal from '../components/catalogue/CatalogueWAModal';
 
 export default function Machines() {
@@ -107,8 +108,6 @@ export default function Machines() {
     finally { setUploading(null); }
   };
 
-  const categories = ['T-Shirt Heat Press', 'Mug Press', 'Cap Press', 'Combo Press', 'Plate Press', 'Other'];
-
   if (!isAdmin) {
     return (
       <div style={{ background: '#F4F5F7', minHeight: '100vh' }}>
@@ -172,11 +171,17 @@ export default function Machines() {
               <input className="input" value={form.model_name} onChange={e => setForm(f => ({ ...f, model_name: e.target.value }))} required />
             </div>
             <div>
-              <label className="label">Category</label>
-              <select className="input" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                <option value="">Select category</option>
-                {categories.map(c => <option key={c}>{c}</option>)}
+              <label className="label">Category *</label>
+              <select
+                className="input"
+                value={form.category}
+                onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                style={{ borderColor: !form.category ? '#FCA5A5' : undefined }}
+              >
+                <option value="">-- Select category --</option>
+                {MACHINE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
+              {!form.category && <p style={{ fontSize: 11, color: '#DC2626', marginTop: 4 }}>Category is required</p>}
             </div>
             <div>
               <label className="label">Price (₹)</label>
