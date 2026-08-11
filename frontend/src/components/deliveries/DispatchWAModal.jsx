@@ -20,7 +20,7 @@ export default function DispatchWAModal({ delivery, open, onClose }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('crm_token')}`,
         },
         body: JSON.stringify({ language, transporter_phone: transporterPhone }),
       });

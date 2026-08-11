@@ -30,7 +30,7 @@ export default function AddVisitModal({ open, onClose, onSave }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('crm_token')}`,
         },
         body: JSON.stringify(form),
       });

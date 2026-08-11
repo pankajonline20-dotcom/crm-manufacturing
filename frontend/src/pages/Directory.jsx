@@ -32,7 +32,7 @@ export default function Directory() {
     if (cityFilter) params.append('city', cityFilter);
 
     fetch(`/api/directory?${params.toString()}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      headers: { Authorization: `Bearer ${localStorage.getItem('crm_token')}` },
     })
       .then((r) => r.json())
       .then((data) => {
@@ -178,7 +178,7 @@ export default function Directory() {
           if (search) params.append('q', search);
           if (cityFilter) params.append('city', cityFilter);
           fetch(`/api/directory?${params.toString()}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            headers: { Authorization: `Bearer ${localStorage.getItem('crm_token')}` },
           })
             .then((r) => r.json())
             .then(setContacts)

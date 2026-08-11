@@ -5,7 +5,7 @@ export default function TomorrowVisitors({ onAddVisit }) {
 
   useEffect(() => {
     fetch('/api/visits/tomorrow', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      headers: { Authorization: `Bearer ${localStorage.getItem('crm_token')}` },
     })
       .then((r) => r.json())
       .then((data) => {

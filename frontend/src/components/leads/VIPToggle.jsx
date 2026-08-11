@@ -14,7 +14,7 @@ export default function VIPToggle({ lead, isAdmin, onUpdate }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('crm_token')}`,
         },
         body: JSON.stringify({
           is_vip: newVIPStatus,

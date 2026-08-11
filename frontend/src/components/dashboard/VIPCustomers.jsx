@@ -5,7 +5,7 @@ export default function VIPCustomers() {
 
   useEffect(() => {
     fetch('/api/leads/vip', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      headers: { Authorization: `Bearer ${localStorage.getItem('crm_token')}` },
     })
       .then((r) => r.json())
       .then((data) => {
