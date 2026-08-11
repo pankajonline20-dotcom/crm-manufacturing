@@ -148,7 +148,7 @@ export default function LeadDetail() {
                       <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--brand-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800 }}>{lead?.name[0]}</div>
                       <div>
                         <h2 style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{lead?.name}</h2>
-                        {lead?.city && <div style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}><MapPin size={11} />{lead.city}</div>}
+                        {lead?.city && <div style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}><MapPin size={11} />{lead?.city}</div>}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
@@ -169,23 +169,23 @@ export default function LeadDetail() {
                         {copied ? <Check size={12} style={{ color: 'var(--status-won)' }} /> : <Copy size={12} />}
                       </button>
                     </div>}
-                    {lead.email && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Mail size={13} style={{ color: 'var(--text-muted)' }} /><span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{lead.email}</span></div>}
+                    {lead?.email && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Mail size={13} style={{ color: 'var(--text-muted)' }} /><span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{lead.email}</span></div>}
                   </div>
 
                   <div style={{ marginTop: 12, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 11, color: 'var(--text-muted)', background: 'var(--bg-app)', borderRadius: 6, padding: '2px 8px', fontWeight: 500 }}>
-                      {SOURCE_LABELS[lead.source] || lead.source}
+                      {SOURCE_LABELS[lead?.source] || lead?.source}
                     </span>
-                    {lead.next_followup_date && (
+                    {lead?.next_followup_date && (
                       <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--status-interested)', background: 'rgba(245,158,11,0.12)', borderRadius: 6, padding: '2px 8px' }}>
-                        📅 {formatDate(lead.next_followup_date)}
+                        📅 {formatDate(lead?.next_followup_date)}
                       </span>
                     )}
                   </div>
 
-                  {lead.requirement && (
+                  {lead?.requirement && (
                     <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--bg-app)', borderRadius: 8, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                      {lead.requirement}
+                      {lead?.requirement}
                     </div>
                   )}
                 </>
@@ -247,7 +247,7 @@ export default function LeadDetail() {
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#25D366', color: 'white', borderRadius: 10, padding: '10px 16px', textDecoration: 'none', fontWeight: 600, fontSize: 13 }}>
                 <MessageCircle size={16} /> Open WhatsApp
               </a>
-              <Link to={`/quotations/new?lead_id=${lead.id}&lead_name=${encodeURIComponent(lead.name)}`} className="btn-primary" style={{ justifyContent: 'center', padding: '10px 16px' }}>
+              <Link to={`/quotations/new?lead_id=${lead?.id}&lead_name=${encodeURIComponent(lead?.name)}`} className="btn-primary" style={{ justifyContent: 'center', padding: '10px 16px' }}>
                 <FileText size={16} /> Create Quotation
               </Link>
               <VIPToggle lead={lead} isAdmin={isAdmin} onUpdate={setLead} />
@@ -262,8 +262,8 @@ export default function LeadDetail() {
                 {LEAD_STATUSES.map(s => (
                   <button key={s} onClick={() => handleStatusChange(s)}
                     style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 99, border: 'none', cursor: 'pointer', transition: 'all 150ms',
-                      background: lead.status === s ? STATUS_META[s] : 'var(--bg-app)',
-                      color: lead.status === s ? 'white' : 'var(--text-secondary)' }}>
+                      background: lead?.status === s ? STATUS_META[s] : 'var(--bg-app)',
+                      color: lead?.status === s ? 'white' : 'var(--text-secondary)' }}>
                     {s}
                   </button>
                 ))}
@@ -278,7 +278,7 @@ export default function LeadDetail() {
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   type="date"
-                  value={lead.next_followup_date || ''}
+                  value={lead?.next_followup_date || ''}
                   onChange={async (e) => {
                     try {
                       await api.put(`/leads/${id}`, { next_followup_date: e.target.value });
@@ -291,9 +291,9 @@ export default function LeadDetail() {
                   className="input"
                   style={{ flex: 1, fontSize: 13 }}
                 />
-                {lead.next_followup_date && (
+                {lead?.next_followup_date && (
                   <p style={{ fontSize: 12, color: 'var(--text-secondary)', alignSelf: 'center', margin: 0 }}>
-                    {formatDate(lead.next_followup_date)}
+                    {formatDate(lead?.next_followup_date)}
                   </p>
                 )}
               </div>
@@ -390,7 +390,7 @@ export default function LeadDetail() {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Quotations</h4>
-                    <Link to={`/quotations/new?lead_id=${lead.id}&lead_name=${encodeURIComponent(lead.name)}`} className="btn-primary" style={{ fontSize: 12, padding: '6px 12px' }}>
+                    <Link to={`/quotations/new?lead_id=${lead?.id}&lead_name=${encodeURIComponent(lead?.name)}`} className="btn-primary" style={{ fontSize: 12, padding: '6px 12px' }}>
                       <Plus size={13} /> New Quote
                     </Link>
                   </div>
